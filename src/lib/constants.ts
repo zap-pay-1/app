@@ -1,0 +1,1 @@
+export const SERVER_EDNPOINT_URL = `http://localhost:5000/api/v1/`

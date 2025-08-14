@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from '@clerk/nextjs';
 import ClientProvider from "@/components/providers/client-provider";
+import Sidebar from "@/components/sidebar";
+import Header from "@/components/header";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -28,7 +30,13 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClerkProvider>
           <ClientProvider>
+            <div className="min-h-screen bg-gray-50 ">
+              <Header />
+               <div className="ml-64 flex flex-col min-h-screen px-4">
+              <Sidebar />
         {children}
+        </div>
+        </div>
         </ClientProvider>
         </ClerkProvider>
       </body>

@@ -95,9 +95,10 @@ setStep("otp")
     // If verification was completed, set the session to active
     // and redirect the user
     if (signUpAttempt.status === 'complete') {
+      console.log("signup atttempt", signUpAttempt)
       // CREATE USER IN DB
        await registerUserMutation.mutateAsync({
-    clerkId: signUpAttempt.id!,
+    clerkId: signUpAttempt.createdUserId!,  
     email,
   });
      

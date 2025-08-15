@@ -24,8 +24,56 @@ export interface BUSINESS {
 
 }
 
+ export interface USER {
+    first_name : string
+    last_name : string
+    email : string
+ }
+
+ export interface SUPPORTED_COLLECTION_FIELDS {
+    name : boolean
+    email : boolean
+    phone : boolean
+    billing : boolean
+    shipping : boolean
+    customFields : boolean
+ }
+
+ export interface PRODUCT {
+    image : string
+    title : string
+    description : string
+    price? : number
+ }
+export interface PAY_LINK_TYPES {
+    id : string
+    business : BUSINESS
+    user : USER
+    title : string
+    description : string
+    tag : string
+    btnText : string
+    successMsg : string
+    amount : number
+    currency : string
+    customFields : SUPPORTED_COLLECTION_FIELDS
+    products : PRODUCT[]
+    type : "fixed" | "custom"
+    successUrl? : string
+    cancelUrl ? : string
+
+}
+
+export interface PAYMENT_LINK_DATA {
+  message : string
+  paymentLink : PAY_LINK_TYPES
+}
+
+
 export interface USER_BUSINESSES {
     message : string
     businesses : BUSINESS[]
 }
+
+
 

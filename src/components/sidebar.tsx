@@ -7,12 +7,12 @@ import { Home, CreditCard, ExternalLink, Key, Webhook, BarChart3, LogOut, Zap, S
 import { usePathname } from "next/navigation";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: Home },
-  { name: "Payments", href: "/payments", icon: CreditCard },
-  { name: "Payment Links", href: "/payment-links", icon: ExternalLink },
-  { name: "API & Keys", href: "/api-keys", icon: Key },
-  { name: "Webhooks", href: "/webhooks", icon: Webhook },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: Home },
+  { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
+  { name: "Payment Links", href: "/dashboard/payment-links", icon: ExternalLink },
+  { name: "API & Keys", href: "/dashboard/api-keys", icon: Key },
+  { name: "Webhooks", href: "/dahsboard/webhooks", icon: Webhook },
+  { name: "Settings", href: "/dahsboard/settings", icon: Settings },
 ];
 
 export default function Sidebar() {

@@ -20,44 +20,31 @@ import { Upload, X, Check, Sparkles, ExternalLink, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-const formSchema = z.object({
-  linkType: z.enum(["fixed", "customer"]),
-  amount: z.string().optional(),
-  currency: z.string().default("USDC"),
-  enableSuggestions: z.boolean().default(false),
-  suggestions: z.array(z.string()).default([]),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  image: z.string().optional(),
-  collectName: z.boolean().default(false),
-  collectEmail: z.boolean().default(false),
-  collectPhone: z.boolean().default(false),
-  collectBilling: z.boolean().default(false),
-  collectShipping: z.boolean().default(false),
-  collectCustomFields: z.boolean().default(false),
-  tags: z.array(z.string()).default([]),
-  callToAction: z.enum(["book", "donate", "pay"]).default("pay"),
-  successMessage: z.string().optional(),
-  acceptPaymentOn: z.array(z.string()).default(["ethereum", "polygon"]),
-});
+import { supabase } from "@/lib/supabase-client";
+import { formSchema } from "@/lib/formSchema";
+import { useCreatePaymentLink } from "@/hooks/useCreatePayLink";
+import { useAuth } from "@clerk/clerk-react";
 
 type FormData = z.infer<typeof formSchema>;
 
 const tagOptions = ["Donation", "Freelance", "Payment"];
 const suggestionAmounts = ["5", "10", "25", "50", "100"];
-
+ 
 export default function CreatePaymentLink() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [generatedLink, setGeneratedLink] = useState("");
   const { toast } = useToast();
+  const {userId} = useAuth()
  const router = useRouter()
+   const { mutate: createPaymentLink, isPending } = useCreatePaymentLink();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       linkType: "fixed",
-      currency: "USDC",
+      currency: "sBTC",
       enableSuggestions: false,
+      clerkId : userId!,
       suggestions: [],
       title: "",
       description: "",
@@ -67,38 +54,50 @@ export default function CreatePaymentLink() {
       collectBilling: false,
       collectShipping: false,
       collectCustomFields: false,
-      tags: [],
-      callToAction: "pay",
+      tags: "",
+      btnText: "pay",
       acceptPaymentOn: ["ethereum", "polygon"],
     },
   });
 
   const watchedValues = form.watch();
-
+  const isImageUploaded = form.watch("image")
+  console.log("image value", isImageUploaded)
   // Live preview data
   const previewData = {
     title: watchedValues.title || "Untitled Payment Link",
     description: watchedValues.description || "Payment for goods/services",
     amount: watchedValues.linkType === "fixed" ? watchedValues.amount : "0.5",
     currency: watchedValues.currency,
-    callToAction: watchedValues.callToAction,
-    showSuggestions: watchedValues.linkType === "customer" && watchedValues.enableSuggestions,
+    callToAction: watchedValues.btnText,
+    showSuggestions: watchedValues.linkType === "custom" && watchedValues.enableSuggestions,
     suggestions: watchedValues.suggestions,
   };
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generate a mock link
-    const mockId = Math.random().toString(36).substring(7);
+    const metadata = {
+ ...data,
+ clerkId : userId!
+    }
+      createPaymentLink(metadata, {
+      onSuccess: (res) => {
+        console.log("Payment link created:", res);
+        // maybe redirect or show toast
+          const mockId = Math.random().toString(36).substring(7);
     const link = `https://pay.sbtc.dev/payment/${mockId}`;
     setGeneratedLink(link);
-    
-    setIsSubmitting(false);
     setShowSuccess(true);
+      },
+      onError: (err) => {
+        console.error("Error creating payment link:", err);
+      },
+          onSettled: () => {
+      // onSettled runs after success or error — good place to reset loading states
+      setIsSubmitting(false);
+    },
+    });
+  
   };
 
   const copyLink = () => {
@@ -106,14 +105,6 @@ export default function CreatePaymentLink() {
     toast({ title: "Link copied to clipboard!" });
   };
 
-  const toggleTag = (tag: string) => {
-    const currentTags = form.getValues("tags");
-    if (currentTags.includes(tag)) {
-      form.setValue("tags", currentTags.filter(t => t !== tag));
-    } else {
-      form.setValue("tags", [...currentTags, tag]);
-    }
-  };
 
   const toggleSuggestion = (amount: string) => {
     const currentSuggestions = form.getValues("suggestions");
@@ -124,6 +115,41 @@ export default function CreatePaymentLink() {
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  // Optional: add size/type checks here
+  if (file.size > 5 * 1024 * 1024) {
+    alert('File is too big (max 5MB)');
+    return;
+  }
+
+  const fileName = `${Date.now()}-${file.name}`;
+  
+  const { data, error } = await supabase.storage
+    .from('products') // your bucket name
+    .upload(fileName, file);
+
+  if (error) {
+    console.error('Upload error:', error);
+    return;
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('products')
+    .getPublicUrl(fileName);
+
+  const publicUrl = publicUrlData.publicUrl;
+
+  // Update form value
+  form.setValue('image', publicUrl);
+
+  console.log('Uploaded image URL:', publicUrl);
+};
+
+
+console.log("user id from origin", userId)
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -201,7 +227,7 @@ export default function CreatePaymentLink() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 
                 {/* Link Type */}
-                <Card>
+                <Card className="w-[600px]">
                   <CardHeader>
                     <CardTitle className="text-lg">Link Type</CardTitle>
                     <CardDescription>Choose how customers will pay</CardDescription>
@@ -221,7 +247,7 @@ export default function CreatePaymentLink() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="fixed">Fixed amount</SelectItem>
-                              <SelectItem value="customer">Customer chooses amount</SelectItem>
+                              <SelectItem value="custom">Customer chooses amount</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -280,7 +306,7 @@ export default function CreatePaymentLink() {
                       </motion.div>
                     )}
 
-                    {watchedValues.linkType === "customer" && (
+                    {watchedValues.linkType === "custom" && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
@@ -388,13 +414,29 @@ export default function CreatePaymentLink() {
                     />
 
                     <div className="space-y-2">
-                      <Label>Image <span className="text-gray-400">(Optional)</span></Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer">
-                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600 mb-1">Upload or drag your file here</p>
-                        <p className="text-xs text-gray-400">PNG, JPG, SVG up to 5MB</p>
-                      </div>
-                    </div>
+  <Label>Image <span className="text-gray-400">(Optional)</span></Label>
+  
+  <label className="block">
+    <input
+      type="file"
+      accept="image/png, image/jpeg, image/svg+xml"
+      className="hidden"
+      onChange={handleFileChange}
+    />
+    <div>
+      {isImageUploaded ? (
+        <img src={form.watch("image")} className="max-w-[500px] object-cover rounded-xl" alt="product cover " />
+      ):(
+    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer">
+      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+      <p className="text-sm text-gray-600 mb-1">Upload or drag your file here</p>
+      <p className="text-xs text-gray-400">PNG, JPG, SVG up to 5MB</p>
+    </div>
+      )}
+    </div>
+  </label>
+</div>
+
                   </CardContent>
                 </Card>
                 </AccordionContent>
@@ -459,7 +501,7 @@ export default function CreatePaymentLink() {
                               type="button"
                               variant={watchedValues.tags?.includes(tag) ? "default" : "outline"}
                               size="sm"
-                              onClick={() => toggleTag(tag)}
+                              onClick={() => console.log("tags")}
                               data-testid={`button-tag-${tag.toLowerCase()}`}
                             >
                               {tag}
@@ -471,7 +513,7 @@ export default function CreatePaymentLink() {
                       {/* Call to Action */}
                       <FormField
                         control={form.control}
-                        name="callToAction"
+                        name="btnText"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Call to Action Label</FormLabel>

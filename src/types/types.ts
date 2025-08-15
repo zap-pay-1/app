@@ -24,10 +24,15 @@ export interface BUSINESS {
 
 }
 
+export interface WALLET {
+ label : string
+ address : string
+}
  export interface USER {
     first_name : string
     last_name : string
     email : string
+    wallets : WALLET[]
  }
 
  export interface SUPPORTED_COLLECTION_FIELDS {
@@ -37,6 +42,15 @@ export interface BUSINESS {
     billing : boolean
     shipping : boolean
     customFields : boolean
+ }
+
+  export interface CUSTOMER_COLLECTED_DATA {
+    name? : string
+    email? : string
+    phone? : string
+    city? : string
+    state? : string
+    zipCode : string
  }
 
  export interface PRODUCT {
@@ -75,5 +89,30 @@ export interface USER_BUSINESSES {
     businesses : BUSINESS[]
 }
 
+  
+export interface SESSION {
+    id : string
+    business : BUSINESS
+    amount : number
+    status : "pending" | "confirmed" | "failed" | "canceled" | "expired"
+    currency : string
+    cancelUrl? : string
+    successUrl? : string
+    collectFields : SUPPORTED_COLLECTION_FIELDS
+    collectedData : CUSTOMER_COLLECTED_DATA
+    products : PRODUCT[]
+    expiresAt : Date
+    createdAt : Date
+    updatedAt : Date
+    txId : string
+    confirmations : string
+    verificationAttempts : string
+    user : USER
+
+}
+export interface SESSION_DATA  {
+ message : string
+ session : SESSION
+}
 
 

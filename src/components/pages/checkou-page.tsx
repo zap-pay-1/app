@@ -2,7 +2,7 @@
 
 
 import { SESSION_DATA } from '@/types/types'
-import { Clock, CreditCard, Mail, Phone, User } from 'lucide-react'
+import { Clock, CreditCard, Mail, Phone, QrCode, User, Wallet } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Separator } from '../ui/separator'
 import { useForm } from 'react-hook-form'
@@ -13,6 +13,7 @@ import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Checkbox } from '../ui/checkbox'
 import { Button } from '../ui/button'
+import useCollectInfo from '@/hooks/useCollectFileds'
 
 type Props = {
   data : SESSION_DATA
@@ -30,7 +31,7 @@ const paymentConfigs = {
     collectEmail: true,
     collectPhone: true,
     collectBilling: true,
-    collectShipping: false,
+    collectShipping: true,
   },
   "billing-info": {
     id: "pl2", 
@@ -40,7 +41,7 @@ const paymentConfigs = {
     currency: "USDC",
     collectName: true,
     collectEmail: true,
-    collectPhone: false,
+    collectPhone: true,
     collectBilling: true,
     collectShipping: true,
   }
@@ -66,7 +67,28 @@ const billingSchema = z.object({
 
 
 
-
+interface CollectInfo {
+  name: string;
+  email: string;
+  phone: string;
+  billingAddress: {
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  shippingAddress: {
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  customFields: Record<string, string>; // dynamic extra fields
+}
 
 
 
@@ -84,6 +106,29 @@ export default function CheckoutPage(data : Props) {
        const [isProcessing, setIsProcessing] = useState(false);
   const [billingAsShipping, setBillingAsShipping] = useState(false);
    const [paymentConfig, setPaymentConfig] = useState<any>(null);
+   /*const [collectInfo, setCollectInfo] = useState<CollectInfo>({
+    name: "",
+    email: "",
+    phone: "",
+    billingAddress: {
+      line1: "",
+      line2: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
+    },
+    shippingAddress: {
+      line1: "",
+      line2: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
+    },
+    customFields: {},
+  });*/
+  const { collectInfo, updateField } = useCollectInfo();
   const paymentLinkId = "pl1";
     // Load checkout data from session storage or use mock data
   useEffect(() => {
@@ -281,17 +326,17 @@ export default function CheckoutPage(data : Props) {
                   {/* Contact Information */}
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-4">Contact Information</h3>
-                    <div className="space-y-4">
-                      <div>
+                   
+                    <div className="space-y-0 ">
+                      <div className='flex items-center space-x-0.5'>
                         <Label htmlFor="name" className="flex items-center text-sm font-medium text-gray-700">
                           <User className="w-4 h-4 mr-2" />
-                          Name
                         </Label>
                         <Input
                           id="name"
-                          placeholder="Achal Sahaya"
+                          placeholder="Name"
                           {...form.register("name")}
-                          className="mt-1"
+                          className="mt-1 h-8"
                           data-testid="input-name"
                         />
                         {form.formState.errors.name && (
@@ -299,17 +344,16 @@ export default function CheckoutPage(data : Props) {
                         )}
                       </div>
 
-                      <div>
+                      <div className='flex items-center space-x-0.5'>
                         <Label htmlFor="email" className="flex items-center text-sm font-medium text-gray-700">
                           <Mail className="w-4 h-4 mr-2" />
-                          Email
                         </Label>
                         <Input
                           id="email"
                           type="email"
-                          placeholder="sahayaachal2@gmail.com"
+                          placeholder="Email"
                           {...form.register("email")}
-                          className="mt-1"
+                          className="mt-1 h-7"
                           data-testid="input-email"
                         />
                         {form.formState.errors.email && (
@@ -318,16 +362,15 @@ export default function CheckoutPage(data : Props) {
                       </div>
 
                       {paymentConfig?.collectPhone && (
-                        <div>
+                        <div className='flex items-center space-x-0.5'>
                           <Label htmlFor="phone" className="flex items-center text-sm font-medium text-gray-700">
                             <Phone className="w-4 h-4 mr-2" />
-                            Phone Number
                           </Label>
                           <Input
                             id="phone"
-                            placeholder="9632206542"
+                            placeholder="Phone"
                             {...form.register("phone")}
-                            className="mt-1"
+                            className="mt-1 h-8"
                             data-testid="input-phone"
                           />
                         </div>
@@ -339,12 +382,11 @@ export default function CheckoutPage(data : Props) {
                   {paymentConfig?.collectShipping && (
                     <div>
                       <h3 className="text-sm font-medium text-gray-700 mb-4">Shipping Information</h3>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="country">Country</Label>
+                      <div className="space-y-0  rounded-xl">
+                        <div className='flex items-center space-x-3'>
                           <Select onValueChange={(value) => form.setValue("country", value)}>
                             <SelectTrigger data-testid="select-country">
-                              <SelectValue placeholder="Tanzania" />
+                              <SelectValue placeholder="Country" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="TZ">Tanzania</SelectItem>
@@ -355,22 +397,20 @@ export default function CheckoutPage(data : Props) {
                           </Select>
                         </div>
 
-                        <div>
-                          <Label htmlFor="addressLine1">Address line 1</Label>
+                        <div className='flex items-center space-x-0.5'>
                           <Input
                             id="addressLine1"
-                            placeholder="kyamuhanga"
+                            placeholder="address line 1"
                             {...form.register("addressLine1")}
                             className="mt-1"
                             data-testid="input-address-1"
                           />
                         </div>
 
-                        <div>
-                          <Label htmlFor="addressLine2">Address line 2</Label>
+                        <div className='flex items-center space-x-0.5'>
                           <Input
                             id="addressLine2"
-                            placeholder="kagombo"
+                            placeholder="Address Line 2"
                             {...form.register("addressLine2")}
                             className="mt-1"
                             data-testid="input-address-2"
@@ -379,30 +419,27 @@ export default function CheckoutPage(data : Props) {
 
                         <div className="grid grid-cols-3 gap-4">
                           <div>
-                            <Label htmlFor="city">City</Label>
                             <Input
                               id="city"
-                              placeholder="bukoba"
+                              placeholder="City"
                               {...form.register("city")}
                               className="mt-1"
                               data-testid="input-city"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="state">State</Label>
                             <Input
                               id="state"
-                              placeholder="Kagera"
+                              placeholder="State"
                               {...form.register("state")}
                               className="mt-1"
                               data-testid="input-state"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="zipCode">ZIP/Postal code</Label>
                             <Input
                               id="zipCode"
-                              placeholder="33106"
+                              placeholder="Zip Code"
                               {...form.register("zipCode")}
                               className="mt-1"
                               data-testid="input-zip"
@@ -427,14 +464,33 @@ export default function CheckoutPage(data : Props) {
                     </div>
                   )}
 
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                    data-testid="button-continue"
-                  >
-                    Continue with your preferred payment method
-                  </Button>
+
                 </form>
+                 <div className='mt-10'>
+                  <h4 className='text-sm'>Continue with your preferred payment method</h4>
+                   <div className='my-3 space-y-3'>
+                   <div className='flex justify-between items-center px-4 border rounded-xl cursor-pointer py-3'>
+                     <div className='flex items-center space-x-1'>
+                      <Wallet />
+                      <p>Wallet</p>
+                     </div>
+                     <div>
+                      <p>StackLogo</p>
+                     </div>
+                   </div>
+
+                     <div className='flex justify-between items-center px-4 border rounded-xl cursor-pointer py-3'>
+                     <div className='flex items-center space-x-1'>
+                      <QrCode />
+                      <p>Scan Qr Code</p>
+                     </div>
+                     <div>
+                      <p>StackLogo</p>
+                     </div>
+                   </div>
+                   </div>
+             
+                  </div>
               </div>
             </div>
     </div>

@@ -16,9 +16,10 @@ import { Button } from '../ui/button'
 import useCollectInfo from '@/hooks/useCollectFileds'
 import { useSubmitTx } from '@/hooks/useSubmitTx'
 import { useParams } from "next/navigation";
-import { connect, disconnect, isConnected, request } from "@stacks/connect";
+import { connect, disconnect, getLocalStorage, isConnected, request } from "@stacks/connect";
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
+import { socket } from '@/lib/wsClient'
 type Props = {
   data : SESSION_DATA
 }
@@ -31,8 +32,34 @@ export default function CheckoutPage(data : Props) {
    const [paymentConfig, setPaymentConfig] = useState<any>(null);
      const [connected, setConnected] = useState(false);
      const [paymentState, setpaymentState] = useState("default")
+     const [stxAddress, setstxAddress] = useState<string | null>()
+     const [btcAddress, setbtcAddress] = useState<string | null>()
+
+       console.log(`this is STX wallet : ${stxAddress} and this is BTC :  ${btcAddress}`)
+     useEffect(() => {
+   if(isConnected()){
+       // Get stored addresses from local storage
+const userData = getLocalStorage();
+if (userData?.addresses) {
+  const stxAddress = userData.addresses.stx[0].address;
+  const btcAddress = userData.addresses.btc[0].address;
+  setstxAddress(stxAddress)
+  setbtcAddress(btcAddress)
+  console.log('STX:', stxAddress);
+  console.log('BTC:', btcAddress);
+   }
+}
+     }, [connected])
+     
+
+
   const params = useParams(); 
-  const sessionId = params.sessionId; // assuming route is /checkout/[sessionId]
+  const sessionId = params.sessionId; 
+
+   socket.on(`checkout:${sessionId}`, (msg) => {
+     console.log(`websocketc is on  and message is : ${msg}`)
+    });
+
   console.log("sesion id is", sessionId)
    /*const [collectInfo, setCollectInfo] = useState<CollectInfo>({
     name: "",
@@ -81,6 +108,7 @@ async function connectWallet() {
 
   // Connect to wallet
   const response = await connect();
+  setConnected(true)
   console.log('Connected:', response.addresses);
 }
 

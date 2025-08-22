@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, ArrowLeft, Shield } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
-
 import { useToast } from "@/hooks/use-toast";
+import { useSignUp, useSignIn } from "@clerk/clerk-react";
+import { useRouter } from "next/navigation";
+
 
 type LoginStep = "email" | "otp" | "success";
 
@@ -17,7 +19,8 @@ export default function Login() {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
-
+    const {isLoaded, signIn, setActive} = useSignIn()
+  const router = useRouter()
   const { toast } = useToast();
   const otpInputs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -29,43 +32,73 @@ export default function Login() {
     }
   }, [countdown]);
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+ const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    
+
+      if (!isLoaded) {
+        console.log(`SDK not loaded yet`)
+        return
+      }
     setIsLoading(true);
+
+    // Request OPT
     
-    try {
-      // Simulate sending OTP
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
+    // Start sign-up process using email and password provided
+  try {
+const signInResp = await signIn.create({ identifier: email });
+console.log("Sigin In res", signInResp)
+const { emailAddressId } = signInResp.supportedFirstFactors.find(
+  (ff) => ff.strategy === "email_code" && ff.safeIdentifier === email
+);
+// Now pass emailAddressId to prepareFirstFactor
+await signIn.prepareFirstFactor({
+  strategy: "email_code",
+  emailAddressId,
+});
+
+    // Set 'pendingVerification' to true to display second form
+    // and capture OTP code
+setStep("otp")
+  toast({
         title: "OTP sent",
         description: `Verification code sent to ${email}`,
       });
-      
-      setStep("otp");
-      setCountdown(60); // 60 seconds countdown
-      
-      // Focus first OTP input
-      setTimeout(() => {
-        otpInputs.current[0]?.focus();
-      }, 100);
-      
-    } catch (error) {
-      console.error("Send OTP error:", error);
+       setCountdown(60);
+  } catch (err ) {
+    // See https://clerk.com/docs/custom-flows/error-handling
+    // for more info on error handling
+    console.error(JSON.stringify(err, null, 2))
+      console.error("Send OTP error:", err);
       toast({
         title: "Failed to send OTP",
         description: "Please try again.",
         variant: "destructive",
       });
-    } finally {
+  
+  }
+   finally {
       setIsLoading(false);
     }
   };
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
-   console.log("OTP  submitted")
+ e.preventDefault()
+    if (!isLoaded) return
+    try {
+      const signInAttempt = await signIn.attemptFirstFactor({
+        code : otp,
+        strategy : "email_code"
+      })
+      if (signInAttempt.status === 'complete') {
+        await setActive({ session: signInAttempt.createdSessionId })
+        router.push('/dashboard')
+      } else {
+        console.error(JSON.stringify(signInAttempt, null, 2))
+      }
+    } catch (err: any) {
+      console.error(JSON.stringify(err, null, 2))
+    }
   };
 
   const handleResendOtp = async () => {
@@ -253,7 +286,7 @@ console.log("started google ath ")
       {/* Resend Code */}
       <div className="text-center mt-6">
         <p className="text-sm text-gray-600 mb-2">
-          Didn't receive the code?
+          Didn&lsquo;t receive the code?
         </p>
         <Button
           variant="ghost"

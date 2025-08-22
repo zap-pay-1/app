@@ -115,4 +115,30 @@ export interface SESSION_DATA  {
  session : SESSION
 }
 
+export interface PAYMENT {
+    id : string
+    businessId : string
+    amount : number
+    currency : string
+     successUrl: string,
+    cancelUrl: string,
+    ollectFields : SUPPORTED_COLLECTION_FIELDS
+    collectedData : CUSTOMER_COLLECTED_DATA
+    producs : PRODUCT[]
+    paymentLink : PAY_LINK_TYPES
+    business : BUSINESS
+    expiresAt: Date,
+    createdAt: Date,
+    updatedAt: Date,
+    txid: string,
+    confirmations: number,
+    verificationAttempts: number,
+}
 
+export interface PAYMENT_DATA {
+    payments : PAYMENT
+}
+
+
+
+ 

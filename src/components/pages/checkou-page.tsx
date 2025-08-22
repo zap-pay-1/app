@@ -20,6 +20,15 @@ import { connect, disconnect, getLocalStorage, isConnected, request } from "@sta
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import { socket } from '@/lib/wsClient'
+import TransferSbtc from '../transferSbtc'
+import { showContractCall } from '@stacks/connect';
+import { Cl, Pc, PostConditionMode, AnchorMode } from '@stacks/transactions';
+import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
+import { useMutation } from '@tanstack/react-query'
+import axios from 'axios'
+import { SERVER_EDNPOINT_URL } from '@/lib/constants'
+import { truncateMiddle } from '@/lib/utils'
+import ScanQrCode from '../scanQrCode'
 type Props = {
   data : SESSION_DATA
 }
@@ -34,8 +43,10 @@ export default function CheckoutPage(data : Props) {
      const [paymentState, setpaymentState] = useState("default")
      const [stxAddress, setstxAddress] = useState<string | null>()
      const [btcAddress, setbtcAddress] = useState<string | null>()
-
-       console.log(`this is STX wallet : ${stxAddress} and this is BTC :  ${btcAddress}`)
+    const [txStatus, settxStatus] = useState()
+    console.log('Backe-end p-status', txStatus)
+    console.log("pay state", paymentState)
+  
      useEffect(() => {
    if(isConnected()){
        // Get stored addresses from local storage
@@ -56,9 +67,38 @@ if (userData?.addresses) {
   const params = useParams(); 
   const sessionId = params.sessionId; 
 
-   socket.on(`checkout:${sessionId}`, (msg) => {
-     console.log(`websocketc is on  and message is : ${msg}`)
-    });
+/* useEffect(() => {
+  // Join the room for this session
+  socket.emit('join_checkout', sessionId);
+
+  // Listen for the correct event
+  socket.on('paymentStatus', (msg) => {
+    if (msg.sessionId === sessionId) {
+      console.log(`WebSocket message:`, msg);
+      settxStatus(msg);
+    }
+  });
+
+  // Cleanup on unmount
+  return () => {
+    socket.off('paymentStatus');
+  };
+}, [sessionId]);*/
+
+useEffect(() => {
+  socket.emit('join_checkout', sessionId);
+
+  socket.on('paymentStatus', (msg) => {
+    if (msg.sessionId === sessionId) {
+      settxStatus(msg.status);
+      setpaymentState(msg.status); // stop loading immediately when tx confirmed
+    }
+  });
+
+  return () => {
+    socket.off('paymentStatus');
+  };
+}, [sessionId]);
 
   console.log("sesion id is", sessionId)
    /*const [collectInfo, setCollectInfo] = useState<CollectInfo>({
@@ -112,17 +152,112 @@ async function connectWallet() {
   console.log('Connected:', response.addresses);
 }
 
+// Transfer BTC
+
+const sbtcTokenAddress = "ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token";
+const sbtcTokenName = "sbtc-token";
+// 2. Function args (transfer)
+const amount = 1000; // in satoshis (check decimals of sBTC contract)
+const sender = "ST3CC2E8Q38R6S4P8A5JKZZ2T15CJEG6HG44ZME4M"; // this will actually be auto-filled from wallet
+const recipient = "ST2XQ48SPBHKQZPQVK3Y1BGJYV8Q9ZJT3K9A7KCJB"; // who receives sBTC
+
+// 3. Post condition: ensure exactly `amount` sBTC leaves wallet
+const postConditions = [
+  Pc.principal(sender)
+    .willSendEq(amount)
+    .ft(sbtcTokenAddress, sbtcTokenName),
+];
+
+// 4. Show wallet popup
+
+const transferSbtc = async () => {
+  return new Promise((resolve, reject) => {
+    showContractCall({
+      contractAddress: sbtcTokenAddress,
+      contractName: sbtcTokenName,
+      functionName: "transfer",
+      functionArgs: [
+        Cl.uint(amount),             // amount (make sure in sats)
+        Cl.principal(sender),        // sender principal
+        Cl.principal(recipient),     // recipient principal
+        Cl.none(),                   // optional memo
+      ],
+      postConditions,
+      postConditionMode: PostConditionMode.Deny,
+      anchorMode: AnchorMode.Any,
+      network: STACKS_TESTNET,
+      onFinish: (data) => {
+       // console.log("Transaction submitted:", data.txId);
+        //resolve(data.txId ); // ✅ properly return txId
+          if (!data.txId) return; // don’t resolve if null
+        resolve(data.txId);
+
+      },
+      onCancel: () => {
+        console.log("User canceled transaction");
+        reject(new Error("User canceled transaction"));
+      },
+    });
+  });
+};
  
 
    const submitTx = useSubmitTx(sessionId);
 
       console.log("the collected ddata", collectInfo)
-   const handleSubmitTx = async () => {
-     submitTx.mutate({
-      txid : "some tx id here",
+  /* const handleSubmitTx = async () => {
+      console.log("handleSubmitTx called");
+    const txId = await transferSbtc()
+    console.log("Got txId:", txId);
+    const res =  await submitTx.mutateAsync({
+      txid : txId,
       collectedData : collectInfo
      })
-   }
+     console.log("submitted copy", res)
+    setTimeout(() => {
+    setpaymentState("loading");
+  }, 70000);
+   }*/
+
+  const handleSubmitTx = async () => {
+  console.log("handleSubmitTx called");
+
+  try {
+    // 1️⃣ Transfer sBTC and get txId
+    const txId = await transferSbtc();
+    console.log("Got txId:", txId);
+
+    // 2️⃣ Submit the tx to your backend
+    const res = await submitTx.mutateAsync({
+      txid: txId,
+      collectedData: collectInfo,
+    });
+    console.log("submitted copy", res);
+
+    // 3️⃣ Set loading state immediately
+    setpaymentState("loading");
+
+    // 4️⃣ Keep the loading for 70 seconds
+    await new Promise((resolve) => setTimeout(resolve, 70000));
+
+    // 5️⃣ After 70s, you can check status or leave socket to update
+    console.log("Loading finished, now waiting for backend socket update");
+    // Optionally, update state to something else if needed
+    // setpaymentState("waitingConfirmation");
+
+  } catch (err) {
+    console.error("Error submitting tx:", err);
+    setpaymentState("error");
+  }
+};
+
+ const handleSendPayment = async () => {
+ if(!isConnected()){
+  connectWallet ()
+ }else {
+  handleSubmitTx()
+ }
+ }
 
 
     const LoadingState = () => (
@@ -172,11 +307,11 @@ async function connectWallet() {
                     >
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Amount</span>
-                        <span className="font-medium text-gray-900">{"10"} {"sBTC"}</span>
+                        <span className="font-medium text-gray-900">{data.data?.session?.amount} {data.data?.session?.currency || "sBTC"}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Network</span>
-                        <span className="font-medium text-gray-900">{ 'Stacks'}</span>
+                        <span className="font-medium text-gray-900">{  'Stacks'}</span>
                       </div>
                     </motion.div>
 
@@ -327,13 +462,13 @@ async function connectWallet() {
                             <Copy className="w-4 h-4" />
                           </button>
                         </div>
-                        <p className="text-xs font-mono text-gray-700 break-all">{txid}</p>
+                        <p className="text-xs font-mono text-gray-700 break-all">{txStatus?.txId}</p>
                       </div>
 
                       <div className="grid grid-cols-1 gap-3">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">From Address</span>
-                          <span className="font-mono text-xs text-gray-900">{fromAddress.slice(0, 8)}...{fromAddress.slice(-6)}</span>
+                          <span className="font-mono text-xs text-gray-900">{stxAddress && truncateMiddle(stxAddress, 13, 6)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">To Address</span>
@@ -341,7 +476,7 @@ async function connectWallet() {
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Amount</span>
-                          <span className="font-medium text-gray-900">{"10"} {"sBTC"}</span>
+                          <span className="font-medium text-gray-900">{data.data.session.amount} {data.data.session.currency || "sBTC"}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Status</span>
@@ -537,11 +672,11 @@ async function connectWallet() {
                  <div className='mt-10'>
                   <h4 className='text-sm'>Continue with your preferred payment method</h4>
                    <div className='my-3 space-y-3'>
-                   <div className='flex justify-between items-center px-4 border rounded-xl cursor-pointer py-3' onClick={() => handleSubmitTx()}>
+                   <div className='flex justify-between items-center px-4 border rounded-xl cursor-pointer py-3' onClick={() => handleSendPayment()}>
                     {submitTx.isPending ? "loading..." :(
-                     <div className='flex items-center space-x-1'>
+                     <div className='flex items-center space-x-1'> 
                       <Wallet className='w-5 h-5 text-gray-800' />
-                      <p className='font-semibold text-sm'>Wallet</p>
+                      <p className='font-semibold text-sm'>{stxAddress ? "Pay With Wallet" : "Connect Wallet"}</p>
                      </div>
                     )}
                      <div className='flex items-center space-x-2'>
@@ -551,15 +686,8 @@ async function connectWallet() {
                      </div>
                    </div>
 
-                     <div className='flex justify-between items-center px-4 border rounded-xl cursor-pointer py-3' onClick={() => connectWallet()}>
-                     <div className='flex items-center space-x-1'>
-                      <QrCode className='w-5 h-5' />
-                      <p className='font-semibold text-sm'>Scan Qr Code</p>
-                     </div>
-                     <div>
-                      <p>StackLogo</p>
-                     </div>
-                   </div>
+                    <ScanQrCode data={data.data} />
+                   <TransferSbtc />
                    </div>
              
                   </div>
@@ -577,7 +705,7 @@ async function connectWallet() {
                 <h3 className="text-lg font-semibold text-gray-900">Total payable amount</h3>
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-lg font-bold text-gray-900">{"10"} {"BTC"}</span>
+                  <span className="text-lg font-bold text-gray-900">{data.data.session.amount} {data.data.session.currency || "sBTC"}</span>
                 </div>
               </div>
 
@@ -687,10 +815,13 @@ async function connectWallet() {
         {paymentState === 'loading' && (
         <LoadingState  />
       )}
-        {paymentState === 'success' && (
+        {paymentState === 'comfirmed' && (
         <SuccesssState  />
       )}
         {paymentState === 'expire' && (
+        <ExpiredState  />
+      )}
+        {paymentState === 'failed' && (
         <ExpiredState  />
       )}
       </AnimatePresence>

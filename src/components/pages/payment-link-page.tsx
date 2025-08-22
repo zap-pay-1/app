@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,9 +32,10 @@ const quickAmounts = [10, 25, 50, 100];
 export default function PayLinkPage(data : Props) {
 const router = useRouter()
   const { mutate: createSession, isPending } = useCreatePaymentSession();
+  const [sessionCreated, setSessionCreated] = useState(false);
 
 
-     useEffect(() => {
+    useEffect(() => {
     if (data.data.paymentLink.type === "fixed") {
       createSession(
         { paymentLinkId: data.data.paymentLink.id },

@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpRight, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { PAYMENT_DATA } from "@/types/types";
+import Payments from "./pages/payments";
+import RecentPaymentsTable from "./recentPaymentsTable";
 
 // Transaction status types and colors
 const statusConfig = {
@@ -44,6 +47,9 @@ interface Transaction {
   paymentLinkTitle?: string;
 }
 
+type Props = {
+  data : PAYMENT_DATA
+}
 function TransactionSkeleton() {
   return (
     <div className="flex items-center justify-between p-4 animate-pulse">
@@ -103,7 +109,7 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
   );
 }
 
-export default function RecentTransactions() {
+export default function RecentTransactions({data} : Props) {
   const [showLoadingDemo, setShowLoadingDemo] = useState(true);
 
   // Simulate API call with loading state demo
@@ -163,12 +169,8 @@ export default function RecentTransactions() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {displayLoading ? (
-          <div className="space-y-1">
-            {[...Array(4)].map((_, i) => (
-              <TransactionSkeleton key={i} />
-            ))}
-          </div>
+        { data.payments? (
+        <RecentPaymentsTable />
         ) : transactions && transactions.length > 0 ? (
           <div className="space-y-1">
             {transactions.slice(0, 5).map((transaction: Transaction) => (

@@ -8,8 +8,12 @@ import CreatePaymentLinkModal from "@/components/modals/create-payment-link-moda
 import { useState } from "react";
 import type { Transaction } from "../../shared/schema";
 import RecentTransactions from "../recent-transactions";
+import { PAYMENT_DATA } from "@/types/types";
 
-export default function Dashboard() {
+type Props = {
+ data : PAYMENT_DATA
+}
+export default function Dashboard({data} : Props) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const { data: stats } = useQuery<{
@@ -33,7 +37,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1  gap-8">
        
         <div className="lg:col-span-1">
-          <RecentTransactions />
+          <RecentTransactions data={data} />
         </div>
       </div>
       

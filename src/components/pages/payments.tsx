@@ -8,8 +8,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Download, RefreshCw, Copy, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Search, Download, RefreshCw, Copy, ExternalLink, Clock } from "lucide-react";
+import { useState, useEffect, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
+import { PAYMENT_DATA, PAYMENT } from "@/types/types";
+import { truncateMiddle } from "@/lib/utils";
+import Link from "next/link";
 
 
 // Placeholder transaction data
@@ -121,7 +124,11 @@ const placeholderTransactions = [
   }
 ];
 
-export default function Payments() {
+type Props = {
+  data : PAYMENT_DATA
+}
+
+export default function Payments({data} :Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -138,7 +145,7 @@ export default function Payments() {
 
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
-      case "paid": return "default";
+      case "comfirmed": return "default";
       case "pending": return "secondary"; 
       case "expired": return "destructive";
       case "refunded": return "outline";
@@ -148,7 +155,7 @@ export default function Payments() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "paid": return "text-green-600 bg-green-50";
+      case "comfirmed": return "text-green-600 bg-green-50";
       case "pending": return "text-yellow-600 bg-yellow-50";
       case "expired": return "text-red-600 bg-red-50";
       case "refunded": return "text-blue-600 bg-blue-50";
@@ -170,68 +177,28 @@ export default function Payments() {
     }
   };
 
-  const filteredTransactions = transactions.filter(tx => 
-    tx.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.amount.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTransactions = data?.payments.filter((tx: PAYMENT)   => 
+    tx.paymentLink.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tx.collectedData?.email && tx.collectedData?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tx.amount.toString().toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoading) {
+  if (data?.payments.length === 0) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm" disabled>
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <Button variant="default" size="sm" disabled>
-              Reprocess payments
-            </Button>
+      <div className="p-8 text-center flex flex-col h-screen items-center justify-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-6 h-6 text-gray-400" />
+            </div>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">No transactions yet</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Transactions will appear here once you start receiving payments
+            </p>
+            <Link href="/dashboard/payment-links">
+              <Button size="sm" data-testid="button-create-payment-link">
+                Create Payment Link
+              </Button>
+            </Link>
           </div>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input 
-              placeholder="Search by checkout session ID"
-              className="pl-10"
-              disabled
-            />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50/50">
-                <TableHead>Date</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead className="w-[100px]">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <TableRow key={i} className="animate-pulse">
-                  <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
-                  <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
-                  <TableCell><div className="h-6 bg-gray-200 rounded-full w-16"></div></TableCell>
-                  <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
-                  <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
-                  <TableCell><div className="h-5 bg-gray-200 rounded-full w-5"></div></TableCell>
-                  <TableCell><div className="h-8 bg-gray-200 rounded w-8"></div></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
     );
   }
 
@@ -277,14 +244,14 @@ export default function Payments() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTransactions.map((transaction) => (
+            {filteredTransactions.map((transaction: PAYMENT) => (
               <Sheet key={transaction.id}>
                 <SheetTrigger asChild>
                   <TableRow 
                     className="cursor-pointer hover:bg-gray-50 transition-colors"
                     data-testid={`row-transaction-${transaction.id}`}
                   >
-                    <TableCell className="text-sm text-gray-900">{transaction.date}</TableCell>
+                    <TableCell className="text-sm text-gray-900">{"July 17 2025"}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
                         <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
@@ -299,11 +266,11 @@ export default function Payments() {
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">{transaction.title}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{transaction.customerEmail}</TableCell>
+                    <TableCell className="text-sm text-gray-900">{transaction.paymentLink.title}</TableCell>
+                    <TableCell className="text-sm text-gray-500">{transaction.collectedData.email}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        {getNetworkIcon(transaction.network)}
+                        {getNetworkIcon("Stack")}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -340,11 +307,11 @@ export default function Payments() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Timestamp</span>
-                      <span className="text-sm text-gray-900">{transaction.timestamp}</span>
+                      <span className="text-sm text-gray-900">{"July 12 2025"}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">One time</span>
-                      <span className="text-sm text-gray-900">{transaction.type}</span>
+                      <span className="text-sm text-gray-900">{transaction.paymentLink.type}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Customer</span>
@@ -362,19 +329,19 @@ export default function Payments() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Type</span>
-                          <span className="text-sm text-gray-900">{transaction.type}</span>
+                          <span className="text-sm text-gray-900">{transaction.paymentLink.type}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Title</span>
-                          <span className="text-sm text-gray-900">{transaction.title}</span>
+                          <span className="text-sm text-gray-900">{truncateMiddle(transaction.paymentLink.title, 25, 10 )}</span>
                         </div>
                         <div className="space-y-1">
                           <span className="text-sm text-gray-500">Description</span>
-                          <p className="text-sm text-gray-900">{transaction.description}</p>
+                          <p className="text-sm text-gray-900">{truncateMiddle(transaction.paymentLink.description, 25, 5)}</p>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Created on</span>
-                          <span className="text-sm text-gray-900">{transaction.timestamp}</span>
+                          <span className="text-sm text-gray-900">{"JUL 12 2025"}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Collect name</span>
@@ -400,7 +367,7 @@ export default function Payments() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Transaction ID</span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm text-gray-900 font-mono">{transaction.transactionId.slice(0, 8)}...</span>
+                              <span className="text-sm text-gray-900 font-mono">{truncateMiddle(transaction.id, 13, 8)}</span>
                               <Button variant="ghost" size="sm" data-testid={`button-copy-tx-id-${transaction.id}`}>
                                 <Copy className="w-3 h-3" />
                               </Button>
@@ -409,14 +376,14 @@ export default function Payments() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Network</span>
                             <div className="flex items-center space-x-2">
-                              {getNetworkIcon(transaction.network)}
-                              <span className="text-sm text-gray-900">{transaction.network}</span>
+                              {getNetworkIcon("Stack")}
+                              <span className="text-sm text-gray-900">{"Stack"}</span>
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Transaction Hash</span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm text-blue-600 font-mono">{transaction.transactionHash.slice(0, 10)}...</span>
+                              <span className="text-sm text-blue-600 font-mono">{truncateMiddle(transaction.txid, 13, 8)}</span>
                               <Button variant="ghost" size="sm" data-testid={`button-copy-hash-${transaction.id}`}>
                                 <Copy className="w-3 h-3" />
                               </Button>
@@ -429,7 +396,7 @@ export default function Payments() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Withdrawal transaction hash</span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm text-blue-600 font-mono">{transaction.withdrawalHash.slice(0, 10)}...</span>
+                              <span className="text-sm text-blue-600 font-mono">{truncateMiddle(transaction.txid, 13, 8)}</span>
                               <Button variant="ghost" size="sm">
                                 <Copy className="w-3 h-3" />
                               </Button>
@@ -437,28 +404,28 @@ export default function Payments() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Withdrawal address</span>
-                            <span className="text-sm text-gray-900 font-mono">{transaction.withdrawalAddress}</span>
+                            <span className="text-sm text-gray-900 font-mono">{"User wallet"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Payment address</span>
-                            <span className="text-sm text-gray-900 font-mono">{transaction.paymentAddress}</span>
+                            <span className="text-sm text-gray-900 font-mono">{"user wallet"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Payment Processing fee (1%)</span>
-                            <span className="text-sm text-gray-900">{transaction.processingFee}</span>
+                            <span className="text-sm text-gray-900">{"0.00"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Discount</span>
-                            <span className="text-sm text-gray-900">{transaction.discount}</span>
+                            <span className="text-sm text-gray-900">{"0.00"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Transaction/Gas Fees</span>
-                            <span className="text-sm text-gray-900">{transaction.gasFees}</span>
+                            <span className="text-sm text-gray-900">{"0.00"}</span>
                           </div>
                           <Separator />
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-900">Net amount</span>
-                            <span className="text-sm font-medium text-gray-900">{transaction.netAmount}</span>
+                            <span className="text-sm font-medium text-gray-900">{transaction.amount}</span>
                           </div>
                         </div>
                       </div>

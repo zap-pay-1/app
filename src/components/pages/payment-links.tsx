@@ -10,6 +10,8 @@ import { Copy, ExternalLink, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { PAY_LINK_TYPES, USER_PAYMENT_LINKS_DATA } from "@/types/types";
+import { truncateMiddle } from "@/lib/utils";
 
 // Placeholder payment links data
 const placeholderPaymentLinks = [
@@ -127,7 +129,11 @@ const placeholderPaymentLinks = [
   }
 ];
 
-export default function PaymentLinks() {
+type Props = {
+ data : USER_PAYMENT_LINKS_DATA
+}
+
+export default function PaymentLinks({data} : Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [paymentLinks, setPaymentLinks] = useState<any[]>([]);
   const { toast } = useToast();
@@ -159,6 +165,18 @@ export default function PaymentLinks() {
     }
   };
 
+   function formatDate(dateString : Date) {
+  const date = new Date(dateString);
+
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short", // 'long' -> August, 'short' -> Aug
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true, // 12-hour format
+  }).format(date);
+   }
   const activeLinks = paymentLinks.filter(link => link.status === "Active").length;
   const deactivatedLinks = paymentLinks.filter(link => link.status === "Inactive").length;
 
@@ -233,7 +251,7 @@ export default function PaymentLinks() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Payment links</h1>
         <Button 
-          onClick={() => router.push("/payment-links/create")}
+          onClick={() => router.push("/dashboard/payment-links/create")}
           data-testid="button-create-payment-link"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -243,15 +261,15 @@ export default function PaymentLinks() {
 
       <div className="flex items-center space-x-8">
         <div className="flex items-center space-x-2">
-          <span className="text-lg font-semibold text-gray-900">{paymentLinks.length}</span>
+          <span className="text-lg font-semibold text-gray-900">{data.paymentLinks.length}</span>
           <span className="text-sm text-gray-600">All payment links</span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-lg font-semibold text-gray-900">{activeLinks}</span>
+          <span className="text-lg font-semibold text-gray-900">{data.paymentLinks.length}</span>
           <span className="text-sm text-gray-600">Active</span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-lg font-semibold text-gray-900">{deactivatedLinks}</span>
+          <span className="text-lg font-semibold text-gray-900">{"0"}</span>
           <span className="text-sm text-gray-600">Deactivated</span>
         </div>
       </div>
@@ -269,7 +287,7 @@ export default function PaymentLinks() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paymentLinks.map((link) => (
+            {data.paymentLinks.map((link : PAY_LINK_TYPES) => (
               <Sheet key={link.id}>
                 <SheetTrigger asChild>
                   <TableRow 
@@ -279,7 +297,7 @@ export default function PaymentLinks() {
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-blue-600 hover:text-blue-800">
-                          {truncateUrl(link.url)}
+                          {truncateMiddle(`https://www.coingecko.com/${link.id}`, 18, 4)}
                         </span>
                         <Button 
                           variant="ghost" 
@@ -287,7 +305,7 @@ export default function PaymentLinks() {
                           className="h-4 w-4 p-0"
                           onClick={(e) => {
                             e.stopPropagation();
-                            copyToClipboard(link.url);
+                            copyToClipboard(`https://www.coingecko.com/${link.id}`);
                           }}
                           data-testid={`button-copy-url-${link.id}`}
                         >
@@ -296,12 +314,12 @@ export default function PaymentLinks() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-gray-900">{link.title}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{link.tags}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{link.createdOn}</TableCell>
+                    <TableCell className="text-sm text-gray-500">{link.tag || "Freelance"}</TableCell>
+                    <TableCell className="text-sm text-gray-500">{"Jul 13 2025"}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
                         <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        <span className="text-sm font-medium text-gray-900">{link.amount}</span>
+                        <span className="text-sm font-medium text-gray-900">{link.amount || "Custom"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -321,8 +339,8 @@ export default function PaymentLinks() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Status</span>
-                      <Badge className={getStatusColor(link.status)}>
-                        {link.status}
+                      <Badge className={getStatusColor("active")}>
+                        {"Active"}
                       </Badge>
                     </div>
                     
@@ -330,7 +348,7 @@ export default function PaymentLinks() {
                       <span className="text-sm text-gray-500">Amount</span>
                       <div className="flex items-center space-x-1">
                         <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        <span className="text-sm text-gray-900">{link.amount}</span>
+                        <span className="text-sm text-gray-900">{link.amount || "Custom"}</span>
                       </div>
                     </div>
 
@@ -338,12 +356,12 @@ export default function PaymentLinks() {
                       <span className="text-sm text-gray-500">URL</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-blue-600 font-mono truncate max-w-[200px]">
-                          {link.url}
+                      {truncateMiddle(`https://www.coingecko.com/${link.id}`, 18, 4)}
                         </span>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => copyToClipboard(link.url)}
+                          onClick={() => copyToClipboard(`https://www.coingecko.com/${link.id}`)}
                           data-testid={`button-copy-url-sheet-${link.id}`}
                         >
                           <Copy className="w-3 h-3" />
@@ -351,7 +369,7 @@ export default function PaymentLinks() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => window.open(link.url, '_blank')}
+                          onClick={() => window.open(`https://www.coingecko.com/${link.id}`, '_blank')}
                           data-testid={`button-open-url-${link.id}`}
                         >
                           <ExternalLink className="w-3 h-3" />
@@ -368,42 +386,42 @@ export default function PaymentLinks() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Created on</span>
-                        <span className="text-sm text-gray-900">{link.createdOn}</span>
+                        <span className="text-sm text-gray-900">{formatDate(link.createdAt)}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Collect name</span>
-                        <span className="text-sm text-gray-900">{link.collectName}</span>
+                        <span className="text-sm text-gray-900">{link.collectFields.name ? "Yes" : "No"}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Collect email</span>
-                        <span className="text-sm text-gray-900">{link.collectEmail}</span>
+                        <span className="text-sm text-gray-900">{link.collectFields.email ? "Yes" : "No"}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Collect phone</span>
-                        <span className="text-sm text-gray-900">{link.collectPhone}</span>
+                        <span className="text-sm text-gray-900">{link.collectFields.phone? "Yes" : "No"}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Collect billing</span>
-                        <span className="text-sm text-gray-900">{link.collectBilling}</span>
+                        <span className="text-sm text-gray-900">{link.collectFields.billing? "Yes" : "No"}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Confirmation page message</span>
-                        <span className="text-sm text-gray-900">{link.confirmationMessage}</span>
+                        <span className="text-sm text-gray-900">{ truncateMiddle(link.successMsg, 15, 8) || "---"}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Call to action</span>
-                        <span className="text-sm text-gray-900">{link.callToAction}</span>
+                        <span className="text-sm text-gray-900">{link.btnText}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Allow promotion codes</span>
-                        <span className="text-sm text-gray-900">{link.allowPromotionCodes}</span>
+                        <span className="text-sm text-gray-900">{"No"}</span>
                       </div>
                     </div>
                   </div>

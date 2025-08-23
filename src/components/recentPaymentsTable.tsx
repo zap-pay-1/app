@@ -13,7 +13,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { SERVER_EDNPOINT_URL } from "@/lib/constants";
 import { useAuth } from "@clerk/nextjs";
-import { PAYMENT_DATA } from "@/types/types";
+import { PAYMENT, PAYMENT_DATA } from "@/types/types";
+import { truncateMiddle } from "@/lib/utils";
 
 
 // Placeholder transaction data
@@ -138,23 +139,24 @@ export default function RecentPaymentsTable() {
 
   const {data, isLoading} = useQuery<PAYMENT_DATA>({
     queryKey : ['payments'],
-    queryFn : fetchUserPayments
+    queryFn : fetchUserPayments,
+    enabled : !!userId
   })
 
   console.log(`real payments data`, data)
 
   // Simulate loading state
-  useEffect(() => {
+/*  useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
       setTransactions(placeholderTransactions);
     }, 1500);
     return () => clearTimeout(timer);
-  }, []);
+  }, []);*/
 
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
-      case "paid": return "default";
+      case "comfirmed": return "default";
       case "pending": return "secondary"; 
       case "expired": return "destructive";
       case "refunded": return "outline";
@@ -164,7 +166,7 @@ export default function RecentPaymentsTable() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "paid": return "text-green-600 bg-green-50";
+      case "comfirmed": return "text-green-600 bg-green-50";
       case "pending": return "text-yellow-600 bg-yellow-50";
       case "expired": return "text-red-600 bg-red-50";
       case "refunded": return "text-blue-600 bg-blue-50";
@@ -195,29 +197,7 @@ export default function RecentPaymentsTable() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm" disabled>
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <Button variant="default" size="sm" disabled>
-              Reprocess payments
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input 
-              placeholder="Search by checkout session ID"
-              className="pl-10"
-              disabled
-            />
-          </div>
-        </div>
+       
 
         <div className="bg-white rounded-lg border">
           <Table>
@@ -268,14 +248,14 @@ export default function RecentPaymentsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTransactions.map((transaction) => (
+            {data?.payments.map((transaction : PAYMENT) => (
               <Sheet key={transaction.id}>
                 <SheetTrigger asChild>
                   <TableRow 
                     className="cursor-pointer hover:bg-gray-50 transition-colors"
                     data-testid={`row-transaction-${transaction.id}`}
                   >
-                    <TableCell className="text-sm text-gray-900">{transaction.date}</TableCell>
+                    <TableCell className="text-sm text-gray-900">{"Jul 10 2025"}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
                         <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
@@ -290,11 +270,11 @@ export default function RecentPaymentsTable() {
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">{transaction.title}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{transaction.customerEmail}</TableCell>
+                    <TableCell className="text-sm text-gray-900">{transaction.paymentLink.title}</TableCell>
+                    <TableCell className="text-sm text-gray-500">{transaction.collectedData.email || "---"}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        {getNetworkIcon(transaction.network)}
+                        {getNetworkIcon("Stack")}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -331,11 +311,11 @@ export default function RecentPaymentsTable() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Timestamp</span>
-                      <span className="text-sm text-gray-900">{transaction.timestamp}</span>
+                      <span className="text-sm text-gray-900">{"Jul 10 2025"}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">One time</span>
-                      <span className="text-sm text-gray-900">{transaction.type}</span>
+                      <span className="text-sm text-gray-900">{"One Time"}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Customer</span>
@@ -353,31 +333,35 @@ export default function RecentPaymentsTable() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Type</span>
-                          <span className="text-sm text-gray-900">{transaction.type}</span>
+                          <span className="text-sm text-gray-900">{transaction.paymentLink.type}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Title</span>
-                          <span className="text-sm text-gray-900">{transaction.title}</span>
+                          <span className="text-sm text-gray-900">{transaction.paymentLink.title}</span>
                         </div>
                         <div className="space-y-1">
                           <span className="text-sm text-gray-500">Description</span>
-                          <p className="text-sm text-gray-900">{transaction.description}</p>
+                          <p className="text-sm text-gray-900">{transaction.paymentLink.description}</p>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Created on</span>
-                          <span className="text-sm text-gray-900">{transaction.timestamp}</span>
+                          <span className="text-sm text-gray-900">{"Jul 10 2025"}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Collect name</span>
-                          <span className="text-sm text-gray-900">Yes</span>
+                          <span className="text-sm text-gray-900">{transaction.ollectFields?.name ? "Yes" : "No"}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Collect email</span>
-                          <span className="text-sm text-gray-900">No</span>
+                          <span className="text-sm text-gray-900">{transaction.ollectFields?.email ? "Yes" : "No"}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Collect phone</span>
-                          <span className="text-sm text-gray-900">No</span>
+                          <span className="text-sm text-gray-900">{transaction.ollectFields?.phone ? "Yes" : "No"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500">Shipping Address</span>
+                          <span className="text-sm text-gray-900">{transaction.ollectFields?.shipping ? "Yes" : "No"}</span>
                         </div>
                       </div>
                     </TabsContent>
@@ -391,7 +375,7 @@ export default function RecentPaymentsTable() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Transaction ID</span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm text-gray-900 font-mono">{transaction.transactionId.slice(0, 8)}...</span>
+                              <span className="text-sm text-gray-900 font-mono">{truncateMiddle(transaction.id, 13, 8)}</span>
                               <Button variant="ghost" size="sm" data-testid={`button-copy-tx-id-${transaction.id}`}>
                                 <Copy className="w-3 h-3" />
                               </Button>
@@ -400,14 +384,14 @@ export default function RecentPaymentsTable() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Network</span>
                             <div className="flex items-center space-x-2">
-                              {getNetworkIcon(transaction.network)}
-                              <span className="text-sm text-gray-900">{transaction.network}</span>
+                              {getNetworkIcon("Stacks")}
+                              <span className="text-sm text-gray-900">{"Stack"}</span>
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Transaction Hash</span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm text-blue-600 font-mono">{transaction.transactionHash.slice(0, 10)}...</span>
+                              <span className="text-sm text-blue-600 font-mono">{truncateMiddle(transaction.txid, 13, 8)}</span>
                               <Button variant="ghost" size="sm" data-testid={`button-copy-hash-${transaction.id}`}>
                                 <Copy className="w-3 h-3" />
                               </Button>
@@ -420,7 +404,7 @@ export default function RecentPaymentsTable() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Withdrawal transaction hash</span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm text-blue-600 font-mono">{transaction.withdrawalHash.slice(0, 10)}...</span>
+                              <span className="text-sm text-blue-600 font-mono">{truncateMiddle(transaction.txid, 13, 8)}</span>
                               <Button variant="ghost" size="sm">
                                 <Copy className="w-3 h-3" />
                               </Button>
@@ -428,28 +412,28 @@ export default function RecentPaymentsTable() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Withdrawal address</span>
-                            <span className="text-sm text-gray-900 font-mono">{transaction.withdrawalAddress}</span>
+                            <span className="text-sm text-gray-900 font-mono">{"User wallet address"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Payment address</span>
-                            <span className="text-sm text-gray-900 font-mono">{transaction.paymentAddress}</span>
+                            <span className="text-sm text-gray-900 font-mono">{"User payment"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Payment Processing fee (1%)</span>
-                            <span className="text-sm text-gray-900">{transaction.processingFee}</span>
+                            <span className="text-sm text-gray-900">{"0.00"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Discount</span>
-                            <span className="text-sm text-gray-900">{transaction.discount}</span>
+                            <span className="text-sm text-gray-900">{"0.00"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Transaction/Gas Fees</span>
-                            <span className="text-sm text-gray-900">{transaction.gasFees}</span>
+                            <span className="text-sm text-gray-900">{"0.00"}</span>
                           </div>
                           <Separator />
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-900">Net amount</span>
-                            <span className="text-sm font-medium text-gray-900">{transaction.netAmount}</span>
+                            <span className="text-sm font-medium text-gray-900">{transaction.amount}</span>
                           </div>
                         </div>
                       </div>

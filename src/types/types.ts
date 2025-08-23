@@ -70,17 +70,24 @@ export interface PAY_LINK_TYPES {
     successMsg : string
     amount : number
     currency : string
-    customFields : SUPPORTED_COLLECTION_FIELDS
+    collectFields : SUPPORTED_COLLECTION_FIELDS
     products : PRODUCT[]
     type : "fixed" | "custom"
     successUrl? : string
     cancelUrl ? : string
+    createdAt: Date,
+    updatedAt: Date
 
 }
 
 export interface PAYMENT_LINK_DATA {
   message : string
   paymentLink : PAY_LINK_TYPES
+}
+
+export interface USER_PAYMENT_LINKS_DATA {
+  message : string
+  paymentLinks : PAY_LINK_TYPES[]
 }
 
 
@@ -120,6 +127,7 @@ export interface PAYMENT {
     businessId : string
     amount : number
     currency : string
+    status : "pending" | "comfirmed" | "failed" | "canceled" | "expired"
      successUrl: string,
     cancelUrl: string,
     ollectFields : SUPPORTED_COLLECTION_FIELDS
@@ -136,7 +144,7 @@ export interface PAYMENT {
 }
 
 export interface PAYMENT_DATA {
-    payments : PAYMENT
+    payments : PAYMENT[]
 }
 
 

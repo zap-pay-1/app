@@ -2,6 +2,7 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { SERVER_EDNPOINT_URL } from "@/lib/constants";
+import { PRODUCT } from "@/types/types";
 
 interface CreatePaymentSessionPayload {
   paymentLinkId: string;
@@ -20,7 +21,7 @@ interface PaymentSession {
   collectFields: Record<string, boolean>;
   successUrl?: string;
   cancelUrl?: string;
-  products: any[];
+  products: PRODUCT[];
   expiresAt: string;
   metadata: Record<string, any>;
 }

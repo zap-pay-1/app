@@ -189,9 +189,9 @@ export default function RecentPaymentsTable() {
   };
 
   const filteredTransactions = transactions.filter(tx => 
-    tx.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.amount.toLowerCase().includes(searchTerm.toLowerCase())
+    tx.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tx.customerEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tx.amount?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -270,8 +270,8 @@ export default function RecentPaymentsTable() {
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">{transaction.paymentLink.title}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{transaction.collectedData.email || "---"}</TableCell>
+                    <TableCell className="text-sm text-gray-900">{transaction.paymentLink ?  truncateMiddle(transaction.paymentLink.title, 24,10) : transaction.metadata ? truncateMiddle(transaction.metadata?.note, 24,10) : "---"}</TableCell>
+                    <TableCell className="text-sm text-gray-500">{transaction.collectedData?.email || transaction.collectedData?.name || "---"}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         {getNetworkIcon("Stack")}
@@ -333,15 +333,15 @@ export default function RecentPaymentsTable() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Type</span>
-                          <span className="text-sm text-gray-900">{transaction.paymentLink.type}</span>
+                          <span className="text-sm text-gray-900">{transaction.paymentLink ? transaction.paymentLink.type : "Checkout"}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Title</span>
-                          <span className="text-sm text-gray-900">{transaction.paymentLink.title}</span>
+                          <span className="text-sm text-gray-900">{transaction.paymentLink ? transaction.paymentLink.title : transaction.metadata?.note}</span>
                         </div>
                         <div className="space-y-1">
                           <span className="text-sm text-gray-500">Description</span>
-                          <p className="text-sm text-gray-900">{transaction.paymentLink.description}</p>
+                          <p className="text-sm text-gray-900">{transaction.paymentLink ? truncateMiddle(transaction.paymentLink.description, 18, 9) : ""}</p>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Created on</span>

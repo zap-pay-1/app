@@ -35,6 +35,11 @@ export interface WALLET {
     wallets : WALLET[]
  }
 
+  export interface USER_DATA {
+      message: string,
+      user : USER
+ }
+
  export interface SUPPORTED_COLLECTION_FIELDS {
     name : boolean
     email : boolean
@@ -55,10 +60,33 @@ export interface WALLET {
 
  export interface PRODUCT {
     image : string
-    title : string
+    title? : string
+    name ? : string
     description : string
     price? : number
  }
+ export interface METADATA {
+   note : string
+   type : "checkout" | "payLink"
+ }
+ export interface COUPON {
+    id : string
+   active : boolean
+   code : string
+   name : string
+   couponType : string
+   discountValue : number
+   redemptionLimit : number
+   timesRedeemed : number
+   updatedAt : Date
+   createdAt : Date
+
+ }
+
+export interface COUPONS {
+    mesaage : string
+    coupons : COUPON[]
+}
 export interface PAY_LINK_TYPES {
     id : string
     business : BUSINESS
@@ -72,6 +100,7 @@ export interface PAY_LINK_TYPES {
     currency : string
     collectFields : SUPPORTED_COLLECTION_FIELDS
     products : PRODUCT[]
+    metadata? : METADATA
     type : "fixed" | "custom"
     successUrl? : string
     cancelUrl ? : string
@@ -128,6 +157,7 @@ export interface PAYMENT {
     amount : number
     currency : string
     status : "pending" | "comfirmed" | "failed" | "canceled" | "expired"
+    metadata? : METADATA
      successUrl: string,
     cancelUrl: string,
     ollectFields : SUPPORTED_COLLECTION_FIELDS
@@ -145,6 +175,34 @@ export interface PAYMENT {
 
 export interface PAYMENT_DATA {
     payments : PAYMENT[]
+}
+
+export interface API_KEY {
+    id : string
+    label : string
+    key : string
+    keyHash : string
+    status : string
+    createdAt : Date
+}
+
+export interface WEB_HOOK {
+    id : string
+    url : string
+    events : string[]
+    secret : string
+    status : string
+    createdAt : Date
+}
+
+export interface API_KEYS_DATA {
+    message : string
+    apiKeys : API_KEY[]
+}
+
+export interface WEB_HOOKS_DATA {
+    message : string
+    webhooks : WEB_HOOK[]
 }
 
 

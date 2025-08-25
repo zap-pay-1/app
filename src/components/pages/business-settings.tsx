@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,23 +30,47 @@ queryKey : ["businesses"],
 queryFn : fetchUserBusineses,
 enabled : !!userId
 })
-console.log("business", businesses)
   const [formData, setFormData] = useState({
-    businessName: businesses?.businesses[0].name ,
-    country: businesses?.businesses[0].country ||  "",
-    addressLine1: businesses?.businesses[0].addressLine1 ||  "",
-    addressLine2: businesses?.businesses[0].addressLine2 ||  "",
-    city: businesses?.businesses[0].city ||  "",
-    state: businesses?.businesses[0].state ||  "",
-    zipCode: businesses?.businesses[0].zipCode ||  "",
-    notificationEmail: businesses?.businesses[0].notificationEmail ||  "",
-    supportEmail: businesses?.businesses[0].supportEmail ||  "",
-    countryCode: businesses?.businesses[0].countryCode ||  "",
-    businessPhone: businesses?.businesses[0].businessPhone ||  "",
-    website: businesses?.businesses[0].website ||  "",
-    companyIdentificationNumber: businesses?.businesses[0].companyIdentificationNumber ||  "",
-    taxIdentificationNumber: businesses?.businesses[0].taxIdentificationNumber ||  ""
-  });
+  businessName: "",
+  country: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  zipCode: "",
+  notificationEmail: "",
+  supportEmail: "",
+  countryCode: "",
+  businessPhone: "",
+  website: "",
+  companyIdentificationNumber: "",
+  taxIdentificationNumber: ""
+});
+
+useEffect(() => {
+  if (businesses?.businesses?.[0]) {
+    const b = businesses.businesses[0];
+    setFormData({
+      businessName: b.name || "",
+      country: b.country || "",
+      addressLine1: b.addressLine1 || "",
+      addressLine2: b.addressLine2 || "",
+      city: b.city || "",
+      state: b.state || "",
+      zipCode: b.zipCode || "",
+      notificationEmail: b.notificationEmail || "",
+      supportEmail: b.supportEmail || "",
+      countryCode: b.countryCode || "",
+      businessPhone: b.businessPhone || "",
+      website: b.website || "",
+      companyIdentificationNumber: b.companyIdentificationNumber || "",
+      taxIdentificationNumber: b.taxIdentificationNumber || ""
+    });
+  }
+}, [businesses]);
+
+
+  
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -73,7 +97,7 @@ console.log("business", businesses)
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/settings">
+          <Link href="/dashboard/settings">
             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Settings

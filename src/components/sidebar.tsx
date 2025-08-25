@@ -11,8 +11,8 @@ const navigation = [
   { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
   { name: "Payment Links", href: "/dashboard/payment-links", icon: ExternalLink },
   { name: "API & Keys", href: "/dashboard/api-keys", icon: Key },
-  { name: "Webhooks", href: "/dahsboard/webhooks", icon: Webhook },
-  { name: "Settings", href: "/dahsboard/settings", icon: Settings },
+  { name: "Webhooks", href: "/dashboard/webhooks", icon: Webhook },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function Sidebar() {

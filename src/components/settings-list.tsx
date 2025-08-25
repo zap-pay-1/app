@@ -8,28 +8,28 @@ const settingsOptions = [
     title: "Account Details",
     description: "Manage your personal account information and preferences",
     icon: User,
-    href: "/settings/account",
+    href: "/dashboard//settings/account",
     testId: "link-account-settings"
   },
   {
     title: "Business Settings", 
     description: "Configure your business information and contact details",
     icon: Building,
-    href: "/settings/business",
+    href: "/dashboard/settings/business",
     testId: "link-business-settings"
   },
   {
     title: "Coupon Codes",
     description: "Create and manage promotional codes for your customers",
     icon: Tag,
-    href: "/settings/coupons",
+    href: "/dashboard/settings/coupons",
     testId: "link-coupon-settings"
   }
 ];
 
 export default function SettingsList() {
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
@@ -37,7 +37,7 @@ export default function SettingsList() {
       </div>
 
       {/* Settings Options */}
-      <div className="grid gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {settingsOptions.map((option) => {
           const IconComponent = option.icon;
           return (

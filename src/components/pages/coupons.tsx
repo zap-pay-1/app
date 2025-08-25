@@ -10,9 +10,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Search, Plus, Calendar, Info, X } from "lucide-react";
+import { ArrowLeft, Search, Plus, Calendar, Info, X, Loader2 } from "lucide-react";
 import Link from "next/link";
-
+import axios from "axios";
+import { SERVER_EDNPOINT_URL } from "@/lib/constants";
+import { useAuth } from "@clerk/clerk-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+import { COUPONS } from "@/types/types";
+import { formatDate } from "date-fns";
 interface Coupon {
   id: string;
   name: string;
@@ -55,16 +62,20 @@ export default function CouponCodes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [coupons, setCoupons] = useState<Coupon[]>(mockCoupons);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const {userId} = useAuth()
+
   const [formData, setFormData] = useState({
     name: "",
     code: "",
     pricingType: "percentage" as "percentage" | "fixed",
-    percentageOff: "",
-    fixedAmount: "",
+    percentageOff: 0,
+    fixedAmount: 0,
     expiresBy: "",
-    redemptionLimit: "",
+    redemptionLimit: 0,
     lifetimePromo: false
   });
+
+   console.log("Forma data", formData)
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -73,9 +84,51 @@ export default function CouponCodes() {
     }));
   };
 
-  const handleCreateCoupon = () => {
+    const createCoupons = async() => {
+      const res = await axios.post(`${SERVER_EDNPOINT_URL}coupons/add`, {
+        name :  formData.name,
+        code :  formData.code,
+        value : formData.pricingType === "fixed" ? Number(formData.fixedAmount) :  Number(formData.percentageOff),
+        type : formData.pricingType === "fixed" ? "fixed_amount" :  "percentage",
+        expireAt : formData.expiresBy,
+        limit :  Number(formData.redemptionLimit),
+       clerkId : userId
+      })
+      return res
+    }
+ const fetchCoupons = async () => {
+   const res = await axios.get(`${SERVER_EDNPOINT_URL}coupons/user/${userId}`)
+   return res.data
+ }
+     const mutate = useMutation({
+      mutationFn : createCoupons,
+      mutationKey : ["coupons"],
+      onSuccess : () => {
+        toast({
+          title : "Coupon created succefully",
+          description : "Coupon created succefully"
+        })
+
+        queryClient.invalidateQueries({queryKey : ["coupons"]})
+      },
+      onError : (error) => {
+         toast({
+          title : "Something Went wrong",
+          description : "Something Went wrong",
+          variant : "destructive"
+        })
+      }
+     })
+
+      const {data, isLoading} = useQuery<COUPONS>({
+    queryKey : ['coupons'],
+    queryFn : fetchCoupons,
+    enabled : !!userId
+      })
+       console.log("coupons :", data)
+  const handleCreateCoupon =  async () => {
     // Create new coupon logic
-    const newCoupon: Coupon = {
+    /*const newCoupon: Coupon = {
       id: Date.now().toString(),
       name: formData.name,
       code: formData.code,
@@ -87,9 +140,10 @@ export default function CouponCodes() {
       created: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       expires: formData.lifetimePromo ? "Never" : new Date(formData.expiresBy).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       status: "active"
-    };
+    };*/
 
-    setCoupons(prev => [newCoupon, ...prev]);
+    //setCoupons(prev => [newCoupon, ...prev]);
+   await mutate.mutateAsync()
     setIsCreateModalOpen(false);
     
     // Reset form
@@ -97,15 +151,15 @@ export default function CouponCodes() {
       name: "",
       code: "",
       pricingType: "percentage",
-      percentageOff: "",
-      fixedAmount: "",
+      percentageOff: 0,
+      fixedAmount: 0,
       expiresBy: "",
-      redemptionLimit: "",
+      redemptionLimit: 0,
       lifetimePromo: false
     });
   };
 
-  const filteredCoupons = coupons.filter(coupon =>
+  const filteredCoupons = data?.coupons.filter(coupon =>
     coupon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     coupon.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -123,12 +177,17 @@ export default function CouponCodes() {
     }
   };
 
+   if(isLoading){
+    <div className="w-full h-screen flex items-center justify-center">
+      <Loader2 className="text-gray-700 w-8 h-8 animate-spin"   />
+    </div>
+   }
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/settings">
+          <Link href="/dashboard/settings">
             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Settings
@@ -304,10 +363,10 @@ export default function CouponCodes() {
                   </Button>
                   <Button
                     onClick={handleCreateCoupon}
-                    disabled={!formData.name || !formData.code}
+                    disabled={!formData.name || !formData.code || mutate.isPending}
                     data-testid="button-create-coupon"
                   >
-                    Add Promocode
+                    {mutate.isPending ? "Loading..." : "Add Promocode"}
                   </Button>
                 </div>
               </div>
@@ -346,36 +405,36 @@ export default function CouponCodes() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCoupons.length > 0 ? (
+              {filteredCoupons && filteredCoupons?.length > 0 ? (
                 filteredCoupons.map((coupon) => (
                   <TableRow key={coupon.id} data-testid={`row-coupon-${coupon.id}`}>
                     <TableCell>
                       <div>
                         <div className="font-medium text-gray-900">{coupon.name}</div>
-                        <div className="text-sm text-gray-500">{coupon.code}</div>
+                        <div className="text-sm text-gray-500 uppercase">{coupon.code}</div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <span className="capitalize text-sm text-gray-600">
-                        {coupon.type}
+                        {coupon.couponType}
                       </span>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm font-medium text-gray-900">
-                        {coupon.type === "percentage" ? `${coupon.value}%` : `$${coupon.value}`}
+                        {coupon.couponType === "percentage" ? `${coupon.discountValue}%` : `$${coupon.discountValue}`}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {getStatusBadge(coupon.status)}
+                      {getStatusBadge("active")}
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-gray-600">{coupon.redemptions}</span>
+                      <span className="text-sm text-gray-600">{coupon.timesRedeemed}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-gray-600">{coupon.created}</span>
+                      <span className="text-sm text-gray-600">{formatDate(coupon.createdAt, "yyyy/MM/dd")}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-gray-600">{coupon.expires}</span>
+                      <span className="text-sm text-gray-600">{"Unlimited"}</span>
                     </TableCell>
                     <TableCell>
                       <Button 

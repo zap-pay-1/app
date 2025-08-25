@@ -177,8 +177,8 @@ export default function Payments({data} :Props) {
     }
   };
 
-  const filteredTransactions = data?.payments.filter((tx: PAYMENT)   => 
-    tx.paymentLink.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredTransactions = data?.payments?.filter((tx: PAYMENT)   => 
+    tx.paymentLink?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tx.collectedData?.email && tx.collectedData?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tx.amount.toString().toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -266,8 +266,8 @@ export default function Payments({data} :Props) {
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-900">{transaction.paymentLink.title}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{transaction.collectedData.email}</TableCell>
+                    <TableCell className="text-sm text-gray-900">{ transaction.paymentLink ?  transaction.paymentLink?.title : transaction.metadata?.note}</TableCell>
+                    <TableCell className="text-sm text-gray-500">{transaction.collectedData?.email || transaction.collectedData?.name || "---"}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         {getNetworkIcon("Stack")}
@@ -311,7 +311,7 @@ export default function Payments({data} :Props) {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">One time</span>
-                      <span className="text-sm text-gray-900">{transaction.paymentLink.type}</span>
+                      <span className="text-sm text-gray-900">{transaction.paymentLink?.type}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Customer</span>
@@ -329,15 +329,15 @@ export default function Payments({data} :Props) {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Type</span>
-                          <span className="text-sm text-gray-900">{transaction.paymentLink.type}</span>
+                          <span className="text-sm text-gray-900">{transaction.paymentLink ? transaction.paymentLink?.type : "Chcekout"}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Title</span>
-                          <span className="text-sm text-gray-900">{truncateMiddle(transaction.paymentLink.title, 25, 10 )}</span>
+                          <span className="text-sm text-gray-900">{ transaction.paymentLink?.title ?truncateMiddle( transaction.paymentLink?.title, 25, 10 ) : transaction.metadata?.note && truncateMiddle(transaction.metadata?.note, 25, 10 )}</span>
                         </div>
                         <div className="space-y-1">
                           <span className="text-sm text-gray-500">Description</span>
-                          <p className="text-sm text-gray-900">{truncateMiddle(transaction.paymentLink.description, 25, 5)}</p>
+                          <p className="text-sm text-gray-900">{transaction.paymentLink?.description ? truncateMiddle(transaction.paymentLink?.description, 25, 5) : ""}</p>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">Created on</span>

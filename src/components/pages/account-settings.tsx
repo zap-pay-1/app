@@ -7,13 +7,26 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@clerk/clerk-react";
+import { USER, USER_DATA } from "@/types/types";
+import axios from "axios";
+import { SERVER_EDNPOINT_URL } from "@/lib/constants";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 
-
-export default function AccountSettings() {
+type Props = {
+  data : USER_DATA
+}
+export default function AccountSettings({data} : Props) {
+  const {user} = useUser()
+  const emailAddress =  user?.primaryEmailAddress?.emailAddress
+   const userId = user?.id
+  console.log("User", user?.id)
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "user@company.com"
+    firstName: data.user.first_name || "",
+    lastName: data.user.last_name || "",
+    walletAddress :  data?.user.wallets && data?.user.wallets[0].address || "",
+    email: emailAddress //"user@company.com"
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -23,8 +36,37 @@ export default function AccountSettings() {
     }));
   };
 
-  const handleSaveChanges = () => {
+   const handleMutate = async () => {
+    const res = await axios.patch(`${SERVER_EDNPOINT_URL}users/${userId}`,{
+      first_name : formData.firstName,
+      last_name : formData.lastName,
+      walletAddress : formData.walletAddress,
+      clerkId : userId
+    })
+    return res
+   }
+
+    const mutate = useMutation({
+      mutationFn : handleMutate,
+      mutationKey : ['settings'],
+      onSuccess : () => {
+        toast({
+          title : "Account setting  saved",
+          description : "Account details changed  succefully"
+        })
+      },
+      onError : (err) => {
+         toast({
+          title : "Something went wrong",
+          description : err.message
+        })
+        console.log(err)
+      }
+
+    })
+  const handleSaveChanges = async () => {
     // Handle save logic here
+    await mutate.mutateAsync()
     console.log("Saving changes:", formData);
   };
 
@@ -33,15 +75,15 @@ export default function AccountSettings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/settings">
+          <Link href="/dashboard/settings">
             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Settings
             </Button>
           </Link>
         </div>
-        <Button onClick={handleSaveChanges} data-testid="button-save-changes">
-          Save changes
+        <Button onClick={handleSaveChanges} data-testid="button-save-changes" disabled={mutate.isPending}>
+         {mutate.isPending ? "Loading..." : " Save changes"}
         </Button>
       </div>
 
@@ -84,6 +126,22 @@ export default function AccountSettings() {
               data-testid="input-last-name"
             />
           </div>
+          
+          {/* Wallet address */}
+          <div className="space-y-2">
+            <Label htmlFor="walletAddress" className="text-sm font-medium text-gray-700">
+              Wallet Address (Stack network)
+            </Label>
+            <Input
+              id="walletAddress"
+              type="text"
+              placeholder="Wallet Address"
+              value={formData.walletAddress}
+              onChange={(e) => handleInputChange("walletAddress", e.target.value)}
+              className="max-w-md"
+              data-testid="wallet-address"
+            />
+          </div>
 
           {/* Email ID */}
           <div className="space-y-2">
@@ -91,7 +149,7 @@ export default function AccountSettings() {
               Email Id
             </Label>
             <div className="text-sm text-gray-600 max-w-md">
-              {formData.email}
+              {emailAddress}
             </div>
           </div>
         </CardContent>

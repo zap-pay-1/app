@@ -44,12 +44,13 @@ export default function CheckoutPage(data : Props) {
      const [stxAddress, setstxAddress] = useState<string | null>()
      const [btcAddress, setbtcAddress] = useState<string | null>()
     const [txStatus, settxStatus] = useState()
-    console.log('Backe-end p-status', txStatus)
-    console.log("pay state", paymentState)
+     const [isApplyCoupon, setisApplyCoupon] = useState(false)
+    const [finalAmount, setfinalAmount] = useState(data.data.session.amount)
+     const [appliedCode, setappliedCode] = useState("")
   
      useEffect(() => {
    if(isConnected()){
-       // Get stored addresses from local storage
+  // Get stored addresses from local storage
 const userData = getLocalStorage();
 if (userData?.addresses) {
   const stxAddress = userData.addresses.stx[0].address;
@@ -100,7 +101,6 @@ useEffect(() => {
   };
 }, [sessionId]);
 
-  console.log("sesion id is", sessionId)
    /*const [collectInfo, setCollectInfo] = useState<CollectInfo>({
     name: "",
     email: "",
@@ -232,7 +232,7 @@ const transferSbtc = async () => {
       txid: txId,
       collectedData: collectInfo,
     });
-    console.log("submitted copy", res);
+
 
     // 3️⃣ Set loading state immediately
     setpaymentState("loading");
@@ -780,14 +780,38 @@ const transferSbtc = async () => {
                   <span className="font-medium">{`30`} {`BTC`}</span>
                 </div>
                 
+                {isApplyCoupon ? (
+                  <div>
+          <div className='w-full p-1 border  flex  rounded-lg'>
+            <Input className='
+             border-none 
+    focus:outline-none 
+    focus:ring-0 
+    focus:ring-offset-0 
+    focus-visible:ring-0 
+    focus-visible:ring-offset-0
+            ' 
+             value={appliedCode}
+             onChange={(e) => setappliedCode(e.target.value)}
+            />
+             <Button size={"sm"}>Apply</Button>
+             </div>
+               {
+              <div className='my-1'> 
+                <p className='text-xs text-red-600'>Coupon not recognized. Try another one.</p>
+              </div>
+             }
+             </div>
+                ):(
                 <div className="flex justify-between text-sm">
                   <button className="text-blue-600 hover:text-blue-800 text-left">
                     Add discount code
                   </button>
-                  <button className="text-blue-600 hover:text-blue-800">
+                  <button className="text-blue-600 hover:text-blue-800" onClick={() => setisApplyCoupon(true)}>
                     Apply
                   </button>
                 </div>
+)}
 
                 <Separator />
 

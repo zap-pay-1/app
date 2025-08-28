@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Zap } from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PAYMENT_LINK_DATA } from "@/types/types";
 import { useCreatePaymentSession } from "@/hooks/useCreateSession";
+import { usdToBtc, usdToSats } from "@/lib/currencyRates";
 
 
 type Props = {
@@ -30,9 +31,16 @@ const currencies = [
 const quickAmounts = [10, 25, 50, 100];
 
 export default function PayLinkPage(data : Props) {
+  const [usdInput, setUsdInput] = useState(""); // user types USD
+const [btcSats, setBtcSats] = useState("");   // converted sats for backend
+    const [formData, setFormData] = useState({
+    currency: "btc",
+    network: "stacks"
+  });
 const router = useRouter()
   const { mutate: createSession, isPending } = useCreatePaymentSession();
   const [sessionCreated, setSessionCreated] = useState(false);
+  const [isFetching, setisFetching] = useState(false)
 
 
     useEffect(() => {
@@ -51,27 +59,38 @@ const router = useRouter()
     }
   }, [data, createSession, router]);
 
+// debounce conversion
+useEffect(() => {
+  const timer = setTimeout(async () => {
+    if (!usdInput) {
+      setBtcSats("");
+      return;
+    }
+    setisFetching(true)
+    const sats = await usdToSats(Number(usdInput));
+    setisFetching(false)
+    setBtcSats(sats.toString());
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [usdInput]);
+
+console.log(`Form data Amount ${usdInput}`)
 
 
-  const [formData, setFormData] = useState({
-    amount: "",
-    currency: "btc",
-    network: "stacks"
-  });
-
-  const handleAmountChange = (value: string) => {
+  const handleAmountChange = async (value: string) => {
     // Only allow numbers and decimal point
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
-      setFormData(prev => ({ ...prev, amount: value }));
+     setUsdInput(value)
     }
   };
 
   const handleQuickAmount = (amount: number) => {
-    setFormData(prev => ({ ...prev, amount: amount.toString() }));
+    setUsdInput(amount.toString())
   };
 
   const handleContinueToPay = (amount : number, currency : string) => {
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+    if (!btcSats || Number(btcSats) <= 0) {
       return;
     }
     
@@ -91,7 +110,7 @@ const router = useRouter()
   const selectedNetwork = networks.find(n => n.id === formData.network);
   const selectedCurrency = currencies.find(c => c.id === formData.currency);
 
-  const isValidAmount = formData.amount && parseFloat(formData.amount) > 0;
+  const isValidAmount = usdInput && parseFloat(usdInput) > 0;
 
   //  create session and redirect
   
@@ -193,7 +212,7 @@ const router = useRouter()
                 <Input
                   type="text"
                   placeholder="10"
-                  value={formData.amount}
+                  value={usdInput}
                   onChange={(e) => handleAmountChange(e.target.value)}
                   className="pl-10 text-lg font-medium h-12 text-center"
                   data-testid="input-amount"
@@ -220,12 +239,22 @@ const router = useRouter()
 
             {/* Continue Button */}
             <Button
-              onClick={()  => handleContinueToPay(Number(formData.amount), formData.currency)}
-              disabled={!isValidAmount}
+              onClick={()  => handleContinueToPay(Number(btcSats), formData.currency)}
+              disabled={!isValidAmount || !btcSats || isPending}
               className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500"
               data-testid="button-continue-to-pay"
             >
-               {isPending ? "Loading..." : `Continue to ${data.data.paymentLink.btnText}`}
+               {  isFetching ?(
+                <div className="flex items-center space-x-1">
+                  <Loader2 className="w-4 h-4 animate-spin"  />
+                <span>Checking sBTC price....</span>
+                </div>
+               ): isPending ? (
+                <div className="flex items-center space-x-1">
+                  <Loader2 className="w-4 h-4 animate-spin"  />
+                <span>Loading...</span>
+                </div>
+               ): `Continue to ${data.data.paymentLink.btnText}`}
             </Button>
           </div>
         </CardContent>

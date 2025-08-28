@@ -10,6 +10,10 @@ import { useQuery } from "@tanstack/react-query";
 import { PAYMENT_DATA } from "@/types/types";
 import Payments from "./pages/payments";
 import RecentPaymentsTable from "./recentPaymentsTable";
+import { useAuth } from "@clerk/clerk-react";
+import axios from "axios";
+import { SERVER_EDNPOINT_URL } from "@/lib/constants";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 // Transaction status types and colors
 const statusConfig = {
@@ -109,16 +113,57 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
   );
 }
 
-export default function RecentTransactions({data} : Props) {
+const LoadingState = () => (
+   <div className="space-y-6">
+       
+
+        <div className="bg-white rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50/50">
+                <TableHead>Date</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead className="w-[100px]">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <TableRow key={i} className="animate-pulse">
+                  <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                  <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                  <TableCell><div className="h-6 bg-gray-200 rounded-full w-16"></div></TableCell>
+                  <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                  <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                  <TableCell><div className="h-5 bg-gray-200 rounded-full w-5"></div></TableCell>
+                  <TableCell><div className="h-8 bg-gray-200 rounded w-8"></div></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+)
+
+export default function RecentTransactions() {
   const [showLoadingDemo, setShowLoadingDemo] = useState(true);
+  const {userId} = useAuth()
 
   // Simulate API call with loading state demo
-  const { data: transactions = [], isLoading, refetch } = useQuery<Transaction[]>({
-    queryKey: ['/api/transactions/recent'],
-    enabled: !showLoadingDemo,
-    retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 30000, // Keep data fresh for 30 seconds
+  const fetchRecentTxs = async () => {
+    const res = await axios.get(`${SERVER_EDNPOINT_URL}payments/${userId}`)
+    return res.data
+  }
+  const { data, isLoading, refetch } = useQuery<PAYMENT_DATA>({
+    queryKey: ['payments'],
+    queryFn : fetchRecentTxs,
+    enabled: !!userId,
+    //retry: false,
+    //refetchOnWindowFocus: false,
+    //staleTime: 30000, // Keep data fresh for 30 seconds
   });
 
   // Demo: Show loading state for 3 seconds, then show data/empty state
@@ -169,15 +214,13 @@ export default function RecentTransactions({data} : Props) {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        { data.payments? (
-        <RecentPaymentsTable />
-        ) : transactions && transactions.length > 0 ? (
-          <div className="space-y-1">
-            {transactions.slice(0, 5).map((transaction: Transaction) => (
-              <TransactionRow key={transaction.id} transaction={transaction} />
-            ))}
-          </div>
-        ) : (
+        {data?.payments? (
+        <RecentPaymentsTable data={data!} isLoading={isLoading} />
+        ) : isLoading ? (
+   <LoadingState />
+        )
+        
+        : data?.payments.length === 0 &&(
           <div className="p-8 text-center">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Clock className="w-6 h-6 text-gray-400" />
@@ -186,7 +229,7 @@ export default function RecentTransactions({data} : Props) {
             <p className="text-xs text-gray-500 mb-4">
               Transactions will appear here once you start receiving payments
             </p>
-            <Link href="/payment-links">
+            <Link href="/dashboard/payment-links/create">
               <Button size="sm" data-testid="button-create-payment-link">
                 Create Payment Link
               </Button>

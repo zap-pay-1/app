@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { PAY_LINK_TYPES, USER_PAYMENT_LINKS_DATA } from "@/types/types";
 import { truncateMiddle } from "@/lib/utils";
+import { Avatar, AvatarImage } from "../ui/avatar";
+import { sBTClOGO } from "@/lib/constants";
 
 // Placeholder payment links data
 const placeholderPaymentLinks = [
@@ -318,7 +320,11 @@ export default function PaymentLinks({data} : Props) {
                     <TableCell className="text-sm text-gray-500">{"Jul 13 2025"}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
-                        <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                            <Avatar className="rounded-full w-4 h-4">
+                         <AvatarImage
+          src={sBTClOGO}
+          alt="BTC"
+        /></Avatar>
                         <span className="text-sm font-medium text-gray-900">{link.amount || "Custom"}</span>
                       </div>
                     </TableCell>
@@ -347,7 +353,11 @@ export default function PaymentLinks({data} : Props) {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Amount</span>
                       <div className="flex items-center space-x-1">
-                        <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                          <Avatar className="rounded-full w-4 h-4">
+                         <AvatarImage
+          src={sBTClOGO}
+          alt="BTC"
+        /></Avatar>
                         <span className="text-sm text-gray-900">{link.amount || "Custom"}</span>
                       </div>
                     </div>

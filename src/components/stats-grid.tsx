@@ -1,14 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bitcoin, CreditCard, TrendingUp, ExternalLink } from "lucide-react";
+import { STATS } from "@/types/types";
+import { formatSatsToBtcUI1 } from "@/lib/currencyRates";
 
 interface StatsGridProps {
-  stats?: {
-    totalVolume: string;
-    transactions: number;
-    successRate: string;
-    activeLinks: number;
-  };
+  stats?: STATS
   onCreatePaymentLink: () => void;
 }
 
@@ -21,7 +18,7 @@ export default function StatsGrid({ stats, onCreatePaymentLink }: StatsGridProps
             <div>
               <p className="text-sm font-medium text-gray-600">Total Volume</p>
               <p className="text-2xl font-bold text-gray-900" data-testid="stat-total-volume">
-                {stats?.totalVolume || "0.00"} BTC
+                { stats?.stats.totalVolume.value ?formatSatsToBtcUI1(stats?.stats.totalVolume.value) : "0.00 sBTC"}
               </p>
             </div>
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -29,7 +26,7 @@ export default function StatsGrid({ stats, onCreatePaymentLink }: StatsGridProps
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-sm text-green-600">+0% from last month</span>
+            <span className="text-sm text-green-600">{stats?.stats.totalVolume.growth}</span>
           </div>
         </CardContent>
       </Card>
@@ -40,7 +37,7 @@ export default function StatsGrid({ stats, onCreatePaymentLink }: StatsGridProps
             <div>
               <p className="text-sm font-medium text-gray-600">Transactions</p>
               <p className="text-2xl font-bold text-gray-900" data-testid="stat-transactions">
-                {stats?.transactions || 0}
+                {stats?.stats.totalTransactions.value || 0}
               </p>
             </div>
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -48,7 +45,7 @@ export default function StatsGrid({ stats, onCreatePaymentLink }: StatsGridProps
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-sm text-green-600">+0% from last month</span>
+            <span className="text-sm text-green-600">{stats?.stats.totalTransactions.growth}</span>
           </div>
         </CardContent>
       </Card>
@@ -59,7 +56,7 @@ export default function StatsGrid({ stats, onCreatePaymentLink }: StatsGridProps
             <div>
               <p className="text-sm font-medium text-gray-600">Success Rate</p>
               <p className="text-2xl font-bold text-gray-900" data-testid="stat-success-rate">
-                {stats?.successRate || "0"}%
+                { "0"}%
               </p>
             </div>
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -78,7 +75,7 @@ export default function StatsGrid({ stats, onCreatePaymentLink }: StatsGridProps
             <div>
               <p className="text-sm font-medium text-gray-600">Active Links</p>
               <p className="text-2xl font-bold text-gray-900" data-testid="stat-active-links">
-                {stats?.activeLinks || 0}
+                {stats?.stats.totalPaymentLinks.value || 0}
               </p>
             </div>
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">

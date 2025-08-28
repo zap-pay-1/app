@@ -83,7 +83,7 @@ export default function Webhooks() {
   };
 
   if (isLoading) {
-    return <div data-testid="loading-state">Loading...</div>;
+    return <div data-testid="loading-state" className="w-full flex items-center justify-center h-screen"><p>Loading...</p></div>;
   }
 
   return (

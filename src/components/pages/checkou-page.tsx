@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client"
 
 
-import { SESSION_DATA } from '@/types/types'
-import { CheckCircle2, Clock, Copy, CreditCard, Download, Loader2, Mail, Phone, QrCode, User, Wallet, XCircle } from 'lucide-react'
+import { PRODUCT, SESSION_DATA } from '@/types/types'
+import { CheckCircle2, Clock, Copy, CreditCard, Download, Loader2, Mail, Phone, QrCode, ScanIcon, User, Wallet, XCircle } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Separator } from '../ui/separator'
 import { useForm } from 'react-hook-form'
@@ -24,13 +25,22 @@ import TransferSbtc from '../transferSbtc'
 import { showContractCall } from '@stacks/connect';
 import { Cl, Pc, PostConditionMode, AnchorMode } from '@stacks/transactions';
 import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import { SERVER_EDNPOINT_URL } from '@/lib/constants'
-import { truncateMiddle } from '@/lib/utils'
+import { sBTClOGO, SERVER_EDNPOINT_URL } from '@/lib/constants'
+import { openInExplorer, truncateMiddle } from '@/lib/utils'
 import ScanQrCode from '../scanQrCode'
+import { toast } from '@/hooks/use-toast'
+import { error } from 'console'
+import { formatSatsToBtcUI, formatSatsToBtcUI1, getBtcUsdPrice, satsToUsd, usdToBtc } from '@/lib/currencyRates'
+import { useSatsToUsd } from '@/hooks/useGetUsdBySats'
 type Props = {
   data : SESSION_DATA
+}
+
+type RedeemProps = {
+  couponCode : string
+  sessionId : string
 }
 
 export default function CheckoutPage(data : Props) {
@@ -47,6 +57,8 @@ export default function CheckoutPage(data : Props) {
      const [isApplyCoupon, setisApplyCoupon] = useState(false)
     const [finalAmount, setfinalAmount] = useState(data.data.session.amount)
      const [appliedCode, setappliedCode] = useState("")
+     const [applied, setapplied] = useState(false)
+     const [transferTxId, settransferTxId] = useState("")
   
      useEffect(() => {
    if(isConnected()){
@@ -68,30 +80,13 @@ if (userData?.addresses) {
   const params = useParams(); 
   const sessionId = params.sessionId; 
 
-/* useEffect(() => {
-  // Join the room for this session
-  socket.emit('join_checkout', sessionId);
-
-  // Listen for the correct event
-  socket.on('paymentStatus', (msg) => {
-    if (msg.sessionId === sessionId) {
-      console.log(`WebSocket message:`, msg);
-      settxStatus(msg);
-    }
-  });
-
-  // Cleanup on unmount
-  return () => {
-    socket.off('paymentStatus');
-  };
-}, [sessionId]);*/
 
 useEffect(() => {
   socket.emit('join_checkout', sessionId);
 
   socket.on('paymentStatus', (msg) => {
     if (msg.sessionId === sessionId) {
-      settxStatus(msg.status);
+      settxStatus(msg.txId);
       setpaymentState(msg.status); // stop loading immediately when tx confirmed
     }
   });
@@ -152,6 +147,7 @@ async function connectWallet() {
   console.log('Connected:', response.addresses);
 }
 
+
 // Transfer BTC
 
 const sbtcTokenAddress = "ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token";
@@ -159,7 +155,9 @@ const sbtcTokenName = "sbtc-token";
 // 2. Function args (transfer)
 const amount = 1000; // in satoshis (check decimals of sBTC contract)
 const sender = "ST3CC2E8Q38R6S4P8A5JKZZ2T15CJEG6HG44ZME4M"; // this will actually be auto-filled from wallet
-const recipient = "ST2XQ48SPBHKQZPQVK3Y1BGJYV8Q9ZJT3K9A7KCJB"; // who receives sBTC
+const recipient = data.data.session.user.wallets[0].address; // who receives sBTC
+
+  console.log("recipients", recipient)
 
 // 3. Post condition: ensure exactly `amount` sBTC leaves wallet
 const postConditions = [
@@ -168,40 +166,72 @@ const postConditions = [
     .ft(sbtcTokenAddress, sbtcTokenName),
 ];
 
-// 4. Show wallet popup
+const {data:usdValue, isLoading:usdValueLoading} = useSatsToUsd(finalAmount)
 
+  console.log("Usd value :", usdValue)
 const transferSbtc = async () => {
   return new Promise((resolve, reject) => {
-    showContractCall({
-      contractAddress: sbtcTokenAddress,
-      contractName: sbtcTokenName,
-      functionName: "transfer",
-      functionArgs: [
-        Cl.uint(amount),             // amount (make sure in sats)
-        Cl.principal(sender),        // sender principal
-        Cl.principal(recipient),     // recipient principal
-        Cl.none(),                   // optional memo
-      ],
-      postConditions,
-      postConditionMode: PostConditionMode.Deny,
-      anchorMode: AnchorMode.Any,
-      network: STACKS_TESTNET,
-      onFinish: (data) => {
-       // console.log("Transaction submitted:", data.txId);
-        //resolve(data.txId ); // ✅ properly return txId
-          if (!data.txId) return; // don’t resolve if null
-        resolve(data.txId);
-
-      },
-      onCancel: () => {
-        console.log("User canceled transaction");
-        reject(new Error("User canceled transaction"));
-      },
-    });
+    try {
+      showContractCall({
+        contractAddress: sbtcTokenAddress,
+        contractName: sbtcTokenName,
+        functionName: "transfer",
+        functionArgs: [
+          Cl.uint(amount),             // amount (make sure in sats)
+          Cl.principal(sender),        // sender principal
+          Cl.principal(recipient),     // recipient principal
+          Cl.none(),                   // optional memo
+        ],
+        postConditions,
+        postConditionMode: PostConditionMode.Deny,
+        anchorMode: AnchorMode.Any,
+        network: STACKS_TESTNET,
+        onFinish: (data) => {
+          if (!data.txId) return;
+          resolve(data.txId);
+        },
+        onCancel: () => {
+          console.log("User canceled transaction");
+          setpaymentState("failed");
+          reject(new Error("User canceled transaction"));
+        },
+      });
+    } catch (error) {
+      console.error("Transaction error:", error);
+      setpaymentState("failed");
+      reject(error);
+    }
   });
 };
  
+  const handleApplyCoupon = async () => {
+    const res = await axios.post(`${SERVER_EDNPOINT_URL}coupons/redeem-coupon`, {
+      couponCode : appliedCode,
+      sessionId : sessionId
+    })
+    return res
+  }
 
+   const applyMutation = useMutation({
+    mutationFn : handleApplyCoupon,
+    mutationKey : ['api/coupons'],
+    onSuccess : (info) => {
+      toast({
+        title : "Coupon applied succefully"
+      })
+      console.log("The information returned", info)
+      setfinalAmount(info.data?.amount)
+      setapplied(true)
+    },
+    onError : (erro) => {
+        toast({
+        title : "Something went wrong",
+        description : erro.message
+      })
+    }
+   })
+
+   //@ts-ignore
    const submitTx = useSubmitTx(sessionId);
 
       console.log("the collected ddata", collectInfo)
@@ -226,9 +256,12 @@ const transferSbtc = async () => {
     // 1️⃣ Transfer sBTC and get txId
     const txId = await transferSbtc();
     console.log("Got txId:", txId);
+    //@ts-ignore
+    settransferTxId(txId)
 
     // 2️⃣ Submit the tx to your backend
     const res = await submitTx.mutateAsync({
+      //@ts-ignore
       txid: txId,
       collectedData: collectInfo,
     });
@@ -238,7 +271,7 @@ const transferSbtc = async () => {
     setpaymentState("loading");
 
     // 4️⃣ Keep the loading for 70 seconds
-    await new Promise((resolve) => setTimeout(resolve, 70000));
+    await new Promise((resolve) => setTimeout(resolve, 90000));
 
     // 5️⃣ After 70s, you can check status or leave socket to update
     console.log("Loading finished, now waiting for backend socket update");
@@ -307,11 +340,11 @@ const transferSbtc = async () => {
                     >
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Amount</span>
-                        <span className="font-medium text-gray-900">{data.data?.session?.amount} {data.data?.session?.currency || "sBTC"}</span>
+                        <span className="font-medium text-gray-900">{finalAmount.toFixed(2)} { "sBTC"}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Network</span>
-                        <span className="font-medium text-gray-900">{  'Stacks'}</span>
+                        <span className="font-medium text-gray-900">{'Stacks'}</span>
                       </div>
                     </motion.div>
 
@@ -372,7 +405,7 @@ const transferSbtc = async () => {
                     >
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Amount</span>
-                        <span className="font-medium text-gray-900">{"6"} {"sBTC"}</span>
+                        <span className="font-medium text-gray-900">{finalAmount.toFixed(2)} {"sBTC"}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Status</span>
@@ -404,9 +437,85 @@ const transferSbtc = async () => {
                     </motion.div>
                   </motion.div>
                 )
-        const fromAddress = "ST3CC2E8Q38R6S4P8A5JKZZ2T15CJEG6HG44ZME4M"
-        const toAddress = "ST3CC2E8Q38R6S4P8A5JKZZ2T15CJEG6HG44ZME4M"
-        const txid = "ST3CC2E8Q38R6S4P8A5JKZZ2T15CJEG6HG44ZME4M"
+
+      const FailedState = () => (
+       <motion.div
+                    key="failed"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    className="text-center py-8"
+                  >
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
+                      className="w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center"
+                    >
+                      <XCircle className="w-8 h-8 text-red-600" />
+                    </motion.div>
+
+                    <motion.h3 
+                      className="text-xl font-bold text-gray-900 mb-2"
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                     Payment Failed
+                    </motion.h3>
+                    
+                    <motion.p 
+                      className="text-sm text-gray-600 mb-6"
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      Something went wrong while processing.
+                      <br />
+                        Please try again or contact support.
+                    </motion.p>
+
+                    <motion.div
+                      className="bg-red-50 rounded-lg p-4 mb-6"
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                    >
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-600">Amount</span>
+                        <span className="font-medium text-gray-900">{finalAmount.toFixed(2)} {"sBTC"}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Status</span>
+                        <span className="font-medium text-red-600">Failed</span>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      className="space-y-3"
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <Button 
+                        onClick={() => window.location.reload()}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        data-testid="button-try-again"
+                      >
+                        Try Again
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setpaymentState('default')}
+                        className="w-full"
+                        data-testid="button-back-to-checkout"
+                      >
+                        Back to Checkout
+                      </Button>
+                    </motion.div>
+                  </motion.div>
+                )
 
 
      const SuccesssState = () => (
@@ -462,7 +571,7 @@ const transferSbtc = async () => {
                             <Copy className="w-4 h-4" />
                           </button>
                         </div>
-                        <p className="text-xs font-mono text-gray-700 break-all">{txStatus?.txId}</p>
+                        <p className="text-xs font-mono text-gray-700 break-all">{transferTxId}</p>
                       </div>
 
                       <div className="grid grid-cols-1 gap-3">
@@ -472,15 +581,15 @@ const transferSbtc = async () => {
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">To Address</span>
-                          <span className="font-mono text-xs text-gray-900">{toAddress.slice(0, 8)}...{toAddress.slice(-6)}</span>
+                          <span className="font-mono text-xs text-gray-900">{data.data.session.user.wallets && truncateMiddle(data.data.session.user.wallets[0].address, 13, 6)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Amount</span>
-                          <span className="font-medium text-gray-900">{data.data.session.amount} {data.data.session.currency || "sBTC"}</span>
+                          <span className="font-medium text-gray-900">{finalAmount.toFixed(2)} {"sBTC"}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Status</span>
-                          <span className="font-medium text-green-600">Confirmed</span>
+                          <span className="font-medium text-green-600">Comfirmed</span>
                         </div>
                       </div>
 
@@ -489,21 +598,21 @@ const transferSbtc = async () => {
                       <Button 
                         className="w-full bg-green-600 hover:bg-green-700"
                         data-testid="button-download-receipt"
+                        onClick={() => openInExplorer(transferTxId)}
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download Receipt
+                        <ScanIcon className="w-4 h-4 mr-2" />
+                        View on Explorer
                       </Button>
                     </motion.div>
                   </motion.div>
      )
 
      const DefaultState = () => (
-      <div className=' border border-blue-400  w-full md:max-w-[500px]'>
+      <div className='   w-full md:max-w-[500px]'>
         <div>
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 bg-blue-600 rounded-full"></div>
-                  <h1 className="text-xl font-semibold text-gray-900">linkPay</h1>
+                  <h1 className="text-xl font-semibold text-gray-900">{data.data.session.business?.name}</h1>
                 </div>
                 {timeRemaining > 0 && (
                   <div className="flex items-center text-sm text-gray-600">
@@ -686,8 +795,10 @@ const transferSbtc = async () => {
                      </div>
                    </div>
 
-                    <ScanQrCode data={data.data} />
-                   <TransferSbtc />
+                    <ScanQrCode data={data.data} amount={finalAmount} />
+
+                    
+                  
                    </div>
              
                   </div>
@@ -698,33 +809,57 @@ const transferSbtc = async () => {
      
   return (
     <div className='w-full h-screen flex flex-col md:flex-row '>
- <div className=' w-full md:w-1/2 flex-1 bg-gray-50 h-screen flex  py-4 md:py-10 justify-end border-b border-r-0 md:border-r md:border-gray-200 px-4 md:px-10 relative'>
-    <div className=' border border-red-600 h-[600px] w-full md:max-w-[500px]'>
+ <div className=' w-full md:w-1/2 flex-1 bg-gray-50 md:min-h-screen flex  py-4 md:py-10 justify-end border-b border-r-0 md:border-r md:border-gray-200 px-4 md:px-10 relative'>
+    <div className=' md:max-h-[700px]  w-full md:max-w-[500px]'>
     <div className="bg-white rounded-lg border p-6 h-fit">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Total payable amount</h3>
-                <div className="flex items-center space-x-1">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-lg font-bold text-gray-900">{data.data.session.amount} {data.data.session.currency || "sBTC"}</span>
-                </div>
-              </div>
+  <h3 className="text-lg font-semibold text-gray-900">Total Payable</h3>
+  <div className="flex items-center space-x-2">
+    {/* BTC Logo */}
+    <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+      <Image src={sBTClOGO} width={24} height={24} alt="sBTC Logo" className="object-cover" />
+    </div>
 
-              <div className="space-y-4 mb-6">
-                <div className="flex items-start space-x-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-6 h-6 text-gray-600" />
+    {/* Amounts */}
+    <div className="flex flex-col items-end">
+      <span className="text-lg font-medium text-gray-900">
+        {formatSatsToBtcUI1(data.data.session.amount) || data.data.session.amount.toFixed(2)}
+      </span>
+      <span className="text-xs text-gray-500 mt-0.5">
+        ≈ ${usdValue?.toFixed(2) || data.data.session.amount.toFixed(2)} USD
+      </span>
+    </div>
+  </div>
+</div>
+
+       
+           {data.data.session.products?.map((prod : PRODUCT, i) => (
+              <div className="space-y-4 mb-6" key={i}>
+                <div className="flex items-center space-x-3">
+                  <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center border p-0.5 border-gray-100 ">
+                    {prod.image ? (
+                      <img  src={prod.image} className=' w-full h-full object-cover' />
+                    ) : (
+                    <CreditCard className="w-8 h-8 text-gray-600" />
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-gray-900">{`this is the title part`}</h4>
-                    <p className="text-xs text-gray-500 mt-1">{`This is the description part.....`}</p>
+                  <div className="flex-1 flex justify-between">
+                    <div>
+                    <h4 className=" text-sm font-medium text-gray-900">{prod.name ? prod.name : prod.title}</h4>
+                     <div className="text-xs text-gray-500 mt-1"> {prod.description ?<p className='capitalize'>{truncateMiddle(prod.description, 26, 4)}</p>: <p><span className='text-base font-light'>Qty</span> {prod?.quantity || 1}</p> }</div>
+                    </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-gray-500">10.0 USDC</span>
+                      <span className="text-xs text-gray-500">{prod.price ? prod.price.toFixed(2) : usdValue?.toFixed(2)} USD</span>
                     </div>
                   </div>
                 </div>
               </div>
+           ))}
+        
 
-              <div className="space-y-4 mb-6">
+              {/*DEMO PRODUCTS CARD*/}
+
+                    <div className="space-y-4 mb-6 hidden">
                 <div className="flex items-center space-x-3">
                   <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center">
                     <CreditCard className="w-8 h-8 text-gray-600" />
@@ -740,49 +875,18 @@ const transferSbtc = async () => {
                   </div>
                 </div>
               </div>
-
-                    <div className="space-y-4 mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-8 h-8 text-gray-600" />
-                  </div>
-                  <div className="flex-1 flex border justify-between">
-                    <div>
-                    <h4 className="text-sm font-medium text-gray-900">{`this is the title part`}</h4>
-                    <p className="text-xs text-gray-500 mt-1">{`This is the description part.....`}</p>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-gray-500">10.0 USDC</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-                    <div className="space-y-4 mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-8 h-8 text-gray-600" />
-                  </div>
-                  <div className="flex-1 flex border justify-between">
-                    <div>
-                    <h4 className="text-sm font-medium text-gray-900">{`this is the title part`}</h4>
-                    <p className="text-xs text-gray-500 mt-1">{`This is the description part.....`}</p>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-gray-500">10.0 USDC</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        
+              
 
               <div className="space-y-3 pt-4 border-t">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">{`30`} {`BTC`}</span>
+                  <span className="font-medium">{usdValue?.toFixed(2)} USD</span>
                 </div>
                 
                 {isApplyCoupon ? (
                   <div>
-          <div className='w-full p-1 border  flex  rounded-lg'>
+          <div className='w-full p-0.5 border  flex  rounded-lg'>
             <Input className='
              border-none 
     focus:outline-none 
@@ -794,11 +898,11 @@ const transferSbtc = async () => {
              value={appliedCode}
              onChange={(e) => setappliedCode(e.target.value)}
             />
-             <Button size={"sm"}>Apply</Button>
+             <Button size={"sm"} onClick={() => applyMutation.mutateAsync()} disabled={!appliedCode || applyMutation.isPending || applied}>{applyMutation.isPending ? "Loading.." : applied? "Applied" : "Apply"}</Button>
              </div>
-               {
+               {applyMutation.isError &&
               <div className='my-1'> 
-                <p className='text-xs text-red-600'>Coupon not recognized. Try another one.</p>
+                <p className='text-xs text-red-600'>Coupon not found or inactive.</p>
               </div>
              }
              </div>
@@ -817,19 +921,33 @@ const transferSbtc = async () => {
 
                 <div className="flex justify-between font-semibold">
                   <span>Amount due</span>
-                  <span>{`40`} {`BTC`}</span>
+                  <div className="flex flex-col items-end">
+      <span className="text-lg font-medium text-gray-900">
+        {formatSatsToBtcUI1(data.data.session.amount) || data.data.session.amount.toFixed(2)}
+      </span>
+      <span className="text-xs text-gray-500 mt-0.5">
+        ≈ ${usdValue?.toFixed(2) || data.data.session.amount.toFixed(2)} USD
+      </span>
+    </div>
                 </div>
               </div>
             </div>
     </div>
 
-    <div className='p-5 border border-yellow-500 hidden md:flex items-center justify-center absolute bottom-2 w-full max-w-[500px]'>
-        <p>Absolute contents</p>
+    <div className='p-5 border border-yellow-500 hidden md:flex items-center justify-center absolute bottom-2 w-full max-w-[500px] space-x-3'>
+        <div>
+           <p className=''><span className=' text-xs text-gray-400'>Powered by</span> <span className='font-semibold text-balance text-sm text-gray-400'>MunaPay</span></p>
+        </div>
+        <div className='w-[2px] h-6 bg-gray-300'></div>
+        <div className='flex items-center space-x-3'>
+          <p className=' text-xs text-gray-400'>Terms</p>
+           <p className=' text-xs text-gray-400'>Terms</p>
+        </div>
     </div>
  </div>
  <div className='w-full md:w-1/2 flex-1 bg-white h-screen flex px-4  md:px-20 py-4 md:py-10'>
 
-    <motion.div className='border border-blue-400  w-full md:max-w-[500px]'
+    <motion.div className=' w-full md:max-w-[500px]'
     transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       <AnimatePresence mode="wait">
@@ -846,17 +964,13 @@ const transferSbtc = async () => {
         <ExpiredState  />
       )}
         {paymentState === 'failed' && (
-        <ExpiredState  />
+        <FailedState  />
+      )}
+       {paymentState === 'abort_by_post_condition' && (
+        <FailedState  />
       )}
       </AnimatePresence>
 
-      <div className='flex items-center space-x-3 mt-16'>
-         <Button onClick={() => setpaymentState("loading")}>Loading</Button>
-          <Button onClick={() => setpaymentState("expire")}>Expire</Button>
-         <Button onClick={() => setpaymentState("success")}>Success</Button>
-         <Button onClick={() => setpaymentState("default")}>Default</Button>
-
-      </div>
     </motion.div>
  </div>
     </div>

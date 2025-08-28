@@ -17,3 +17,10 @@ export function truncateMiddle(
   const end = str.slice(-backChars);
   return `${start}...${end}`;
 }
+
+const STACKS_EXPLORER_URL = "https://explorer.hiro.so";
+
+export function openInExplorer(txId: string, network: "mainnet" | "testnet" = "testnet") {
+  const url = `${STACKS_EXPLORER_URL}/txid/${txId}?chain=${network}`;
+  window.open(url, "_blank"); // opens in a new tab
+}

@@ -8,151 +8,39 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Download, RefreshCw, Copy, ExternalLink } from "lucide-react";
+import { Search, Download, RefreshCw, Copy, ExternalLink, Clock, ArrowUpRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { SERVER_EDNPOINT_URL } from "@/lib/constants";
+import { sBTClOGO, SERVER_EDNPOINT_URL } from "@/lib/constants";
 import { useAuth } from "@clerk/nextjs";
 import { PAYMENT, PAYMENT_DATA } from "@/types/types";
 import { truncateMiddle } from "@/lib/utils";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
+import { Avatar, AvatarImage } from "./ui/avatar";
 
-
-// Placeholder transaction data
-const placeholderTransactions = [
-  {
-    id: "tx1",
-    date: "10 Sep",
-    amount: "2.0 DAI",
-    status: "Pending",
-    title: "KAJU",
-    customerEmail: "freewaka19@gmail.com",
-    timestamp: "Jun 13 2024, 09:55 AM",
-    type: "One time",
-    description: "please help to donate",
-    network: "Polygon",
-    transactionId: "a43ae189-af60-4d8c-a162-ccd5563bc243",
-    transactionHash: "0xcc0c4def2a00f",
-    withdrawalHash: "0xc53db44c128e",
-    withdrawalAddress: "0x345f_73c3_g",
-    paymentAddress: "0xa004c_4161_g",
-    processingFee: "0.0002 USDC",
-    discount: "0.0 USDC",
-    gasFees: "0.0 USDC",
-    netAmount: "0.0196 USDC"
-  },
-  {
-    id: "tx2", 
-    date: "13 Jun",
-    amount: "10.0 USDC",
-    status: "Expired",
-    title: "please help to donate",
-    customerEmail: "-",
-    timestamp: "Jun 13 2024, 09:55 AM",
-    type: "One time",
-    description: "this money will be used for supporting hol has",
-    network: "Ethereum",
-    transactionId: "b54bf290-bg71-5e9d-b273-dde6674cd354",
-    transactionHash: "0xdd1d5efg3b11g",
-    withdrawalHash: "0xd64ebc55d39f",
-    withdrawalAddress: "0x456g_84d4_h",
-    paymentAddress: "0xb115d_5272_h",
-    processingFee: "0.0003 USDC",
-    discount: "0.0 USDC", 
-    gasFees: "0.0 USDC",
-    netAmount: "0.0297 USDC"
-  },
-  {
-    id: "tx3",
-    date: "13 Jun", 
-    amount: "0.02 USDC",
-    status: "Paid",
-    title: "please help to donate",
-    customerEmail: "-",
-    timestamp: "Jun 13 2024, 09:55 AM",
-    type: "One time",
-    description: "please help to donate",
-    network: "Stacks",
-    transactionId: "c65cg301-ch82-6f0e-c384-eef7785de465",
-    transactionHash: "0xee2e6fgh4c22h",
-    withdrawalHash: "0xe75fcd66e40g",
-    withdrawalAddress: "0x567h_95e5_i",
-    paymentAddress: "0xc226e_6384_i",
-    processingFee: "0.0004 USDC",
-    discount: "0.0 USDC",
-    gasFees: "0.0 USDC", 
-    netAmount: "0.0396 USDC"
-  },
-  {
-    id: "tx4",
-    date: "14 Mar",
-    amount: "0.5 USDC", 
-    status: "Refunded",
-    title: "please help to donate",
-    customerEmail: "-",
-    timestamp: "Mar 14 2024, 14:32 PM",
-    type: "One time",
-    description: "please help to donate",
-    network: "Polygon",
-    transactionId: "d76dh412-di93-7g1f-d495-ffg8896ef576",
-    transactionHash: "0xff3f7ghi5d33i",
-    withdrawalHash: "0xf86gde77f51h",
-    withdrawalAddress: "0x678i_06f6_j",
-    paymentAddress: "0xd337g_7495_j",
-    processingFee: "0.0005 USDC",
-    discount: "0.0 USDC",
-    gasFees: "0.0 USDC",
-    netAmount: "0.0495 USDC"
-  },
-  {
-    id: "tx5",
-    date: "06 Mar",
-    amount: "0.5 USDC",
-    status: "Paid", 
-    title: "please help to donate",
-    customerEmail: "-",
-    timestamp: "Mar 06 2024, 11:18 AM",
-    type: "One time",
-    description: "please help to donate",
-    network: "Stacks",
-    transactionId: "e87ei523-ej04-8h2g-e506-ggh9907fg687",
-    transactionHash: "0xgg4g8hij6e44j",
-    withdrawalHash: "0xg97hef88g62i",
-    withdrawalAddress: "0x789j_17g7_k",
-    paymentAddress: "0xe448h_8506_k",
-    processingFee: "0.0006 USDC",
-    discount: "0.0 USDC",
-    gasFees: "0.0 USDC",
-    netAmount: "0.0594 USDC"
-  }
-];
 
 export default function RecentPaymentsTable() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
-//  const [isLoading, setIsLoading] = useState(true);
-  const [transactions, setTransactions] = useState<any[]>([]);
+
   const {userId} = useAuth()
   const fetchUserPayments = async () => {
-    const res = await axios.get(`${SERVER_EDNPOINT_URL}payments/${userId}`)
+    const res = await axios.get(`${SERVER_EDNPOINT_URL}payments/${userId}?limit=5`)
     return res.data
   }
 
-  const {data, isLoading} = useQuery<PAYMENT_DATA>({
+  const {data, isLoading, refetch, isRefetching, isPending} = useQuery<PAYMENT_DATA>({
     queryKey : ['payments'],
     queryFn : fetchUserPayments,
     enabled : !!userId
   })
 
-  console.log(`real payments data`, data)
+    const handleRefresh = () => {
+    if (!isLoading) {
+      refetch();
+    } 
+  };
 
-  // Simulate loading state
-/*  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      setTransactions(placeholderTransactions);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);*/
 
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
@@ -181,20 +69,20 @@ export default function RecentPaymentsTable() {
         return <div className={`${baseClasses} bg-purple-500`}>P</div>;
       case "ethereum":
         return <div className={`${baseClasses} bg-blue-500`}>E</div>;
-      case "stacks":
-        return <div className={`${baseClasses} bg-orange-500`}>S</div>;
+      case "stacks": return(
+        <Avatar className="rounded-full w-6 h-6">
+           <AvatarImage
+          src={sBTClOGO}
+          alt="BTC"
+        />
+        </Avatar>)
       default:
         return <div className={`${baseClasses} bg-gray-500`}>?</div>;
     }
   };
 
-  const filteredTransactions = transactions.filter(tx => 
-    tx.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.customerEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.amount?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
-  if (isLoading) {
+  if (isLoading || isRefetching || isPending) {
     return (
       <div className="space-y-6">
        
@@ -231,9 +119,39 @@ export default function RecentPaymentsTable() {
     );
   }
 
+   console.log("Pyaments data", data?.payments)
+
   return (
+        <Card className="h-fit">
+      <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <CardTitle className="text-lg font-semibold">Recent Transactions</CardTitle>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            className="text-gray-500 hover:text-gray-700"
+            data-testid="button-refresh-transactions"
+          >
+            Refresh
+          </Button>
+          <Link href="/transactions">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-primary hover:text-primary/90"
+              data-testid="link-view-all-transactions"
+            >
+              View all
+              <ArrowUpRight className="w-4 h-4 ml-1" />
+            </Button>
+          </Link>
+        </div>
+      </CardHeader>
+       <CardContent className="p-0">
     <div className="space-y-6">
 
+{data?.payments ?
       <div className="bg-white rounded-lg border">
         <Table>
           <TableHeader>
@@ -258,14 +176,19 @@ export default function RecentPaymentsTable() {
                     <TableCell className="text-sm text-gray-900">{"Jul 10 2025"}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
-                        <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                        <span className="text-sm font-medium text-gray-900">{transaction.amount}</span>
+                       <Avatar className="rounded-full w-4 h-4">
+                         <AvatarImage
+          src={sBTClOGO}
+          alt="BTC"
+        /></Avatar>
+                        <span className="text-sm font-medium text-gray-900">{transaction.amount} Sats</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge 
                         variant={getStatusVariant(transaction.status)}
                         className={getStatusColor(transaction.status)}
+                      
                       >
                         {transaction.status}
                       </Badge>
@@ -274,7 +197,7 @@ export default function RecentPaymentsTable() {
                     <TableCell className="text-sm text-gray-500">{transaction.collectedData?.email || transaction.collectedData?.name || "---"}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        {getNetworkIcon("Stack")}
+                        {getNetworkIcon("stacks")}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -288,8 +211,13 @@ export default function RecentPaymentsTable() {
                 <SheetHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                      <SheetTitle className="text-lg font-semibold">{transaction.amount}</SheetTitle>
+                      <Avatar className="rounded-full w-4 h-4">
+                         <AvatarImage
+          src={sBTClOGO}
+          alt="BTC"
+        />
+         </Avatar>
+                      <SheetTitle className="text-lg font-semibold">{transaction.amount} Sats</SheetTitle>
                     </div>
                     <Button variant="outline" size="sm" data-testid="button-receipt">
                       <Download className="w-4 h-4 mr-2" />
@@ -384,7 +312,7 @@ export default function RecentPaymentsTable() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Network</span>
                             <div className="flex items-center space-x-2">
-                              {getNetworkIcon("Stacks")}
+                              {getNetworkIcon("stacks")}
                               <span className="text-sm text-gray-900">{"Stack"}</span>
                             </div>
                           </div>
@@ -412,11 +340,11 @@ export default function RecentPaymentsTable() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Withdrawal address</span>
-                            <span className="text-sm text-gray-900 font-mono">{"User wallet address"}</span>
+                            <span className="text-sm text-gray-900 font-mono">{ transaction.user.wallets ?  truncateMiddle(transaction.user.wallets[0].address, 13, 8) : "---"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Payment address</span>
-                            <span className="text-sm text-gray-900 font-mono">{"User payment"}</span>
+                            <span className="text-sm text-gray-900 font-mono">{"---"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Payment Processing fee (1%)</span>
@@ -433,7 +361,7 @@ export default function RecentPaymentsTable() {
                           <Separator />
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-900">Net amount</span>
-                            <span className="text-sm font-medium text-gray-900">{transaction.amount}</span>
+                            <span className="text-sm font-medium text-gray-900">{transaction.amount} Sats</span>
                           </div>
                         </div>
                       </div>
@@ -446,6 +374,25 @@ export default function RecentPaymentsTable() {
           </TableBody>
         </Table>
       </div>
+ : (
+   <div className="p-8 text-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-6 h-6 text-gray-400" />
+            </div>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">No transactions yet</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Transactions will appear here once you start receiving payments
+            </p>
+            <Link href="/dashboard/payment-links/create">
+              <Button size="sm" data-testid="button-create-payment-link">
+                Create Payment Link
+              </Button>
+            </Link>
+          </div>
+ )}
     </div>
+    </CardContent>
+    </Card>
+
   );
 }

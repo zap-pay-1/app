@@ -8,45 +8,31 @@ import CreatePaymentLinkModal from "@/components/modals/create-payment-link-moda
 import { useState } from "react";
 import type { Transaction } from "../../shared/schema";
 import RecentTransactions from "../recent-transactions";
-import { PAYMENT_DATA } from "@/types/types";
-
+import { PAYMENT_DATA, STATS } from "@/types/types";
+import RecentPaymentsTable from "../recentPaymentsTable";
+import { useRouter } from "next/navigation";
 type Props = {
- data : PAYMENT_DATA
+ stats : STATS
 }
-export default function Dashboard({data} : Props) {
+export default function Dashboard({stats} : Props) {
+  const router = useRouter()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const { data: stats } = useQuery<{
-    totalVolume: string;
-    transactions: number;
-    successRate: string;
-    activeLinks: number;
-  }>({
-    queryKey: ["/api/stats"],
-  });
-
-  const { data: transactions = [] } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions"],
-  });
-
+ const navigateToCreateLink = () => {
+    router.push("/dashboard/payment-links/create")
+ }
   return (
     <div className="space-y-8">
-      <IntegrationCards onCreatePaymentLink={() => setIsCreateModalOpen(true)} />
-      <StatsGrid stats={stats} onCreatePaymentLink={() => setIsCreateModalOpen(true)} />
+      <IntegrationCards onCreatePaymentLink={navigateToCreateLink} />
+      <StatsGrid stats={stats} onCreatePaymentLink={navigateToCreateLink} />
       
       <div className="grid grid-cols-1  gap-8">
        
         <div className="lg:col-span-1">
-          <RecentTransactions data={data} />
+       <RecentPaymentsTable />
         </div>
       </div>
       
-   <div className="">
-          <TransactionsTable 
-            transactions={transactions} 
-            onCreatePaymentLink={() => setIsCreateModalOpen(true)} 
-          />
-        </div>
       <CreatePaymentLinkModal 
         isOpen={isCreateModalOpen} 
         onClose={() => setIsCreateModalOpen(false)} 

@@ -9,8 +9,9 @@ import { truncateMiddle } from '@/lib/utils';
 
 type Props = {
     data : SESSION_DATA
+    amount : number
 }
-export default function ScanQrCode({data} : Props) {
+export default function ScanQrCode({data, amount} : Props) {
   const { Canvas } = useQRCode();
  const isTrue = true
 
@@ -28,7 +29,7 @@ export default function ScanQrCode({data} : Props) {
                     Scan QR code
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 border border-red-600">
+                <AccordionContent className="px-4 pb-4">
                   <div className="space-y-4">
                 
 
@@ -54,13 +55,13 @@ export default function ScanQrCode({data} : Props) {
 
                     <div className="text-center">
                       <div className="text-lg font-semibold text-gray-900 mb-2">
-                        {data.session.amount} {data.session.currency || "sBTC"}
+                        {amount.toFixed(2)} {"sBTC"}
                       </div>
                       <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded font-mono break-all mb-4">
                         {truncateMiddle(data.session.id, 12, 8)}
                       </div>
                       <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800 mb-4">
-                        Pay only <span className="font-semibold">{data.session.currency || "sBTC"}</span> on <span className="font-semibold">Stack Network</span>.
+                        Pay only <span className="font-semibold">{"sBTC"}</span> on <span className="font-semibold">Stack Network</span>.
                       </div>
                     </div>
 

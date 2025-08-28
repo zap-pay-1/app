@@ -34,7 +34,7 @@ const pathname = usePathname()
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-2">
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname.startsWith(item.href);
           return (
             <Link key={item.name} href={item.href}>
               <div 

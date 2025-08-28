@@ -64,6 +64,7 @@ export interface WALLET {
     name ? : string
     description : string
     price? : number
+    quantity: number,
  }
  export interface METADATA {
    note : string
@@ -165,6 +166,7 @@ export interface PAYMENT {
     producs : PRODUCT[]
     paymentLink : PAY_LINK_TYPES
     business : BUSINESS
+    user : USER
     expiresAt: Date,
     createdAt: Date,
     updatedAt: Date,
@@ -204,6 +206,36 @@ export interface WEB_HOOKS_DATA {
     message : string
     webhooks : WEB_HOOK[]
 }
+
+export interface VOLUME_STATS {
+    value : number
+    unit : string
+    growth : string
+    thisMonth : number
+    lastMoth : number
+}
+
+export interface TRASANCTIONS_STATS {
+    value : number
+    growth : string
+    thisMonth : number
+    lastMoth : number
+}
+export interface PAYLINKS_STATS {
+    value : number
+    growth : string
+}
+
+export interface STATS {
+  stats : {
+    totalVolume : VOLUME_STATS
+    totalTransactions : TRASANCTIONS_STATS
+    totalPaymentLinks : PAYLINKS_STATS
+
+  }
+}
+
+
 
 
 

@@ -13,6 +13,8 @@ import { useState, useEffect, JSXElementConstructor, Key, ReactElement, ReactNod
 import { PAYMENT_DATA, PAYMENT } from "@/types/types";
 import { truncateMiddle } from "@/lib/utils";
 import Link from "next/link";
+import { Avatar, AvatarImage } from "../ui/avatar";
+import { sBTClOGO } from "@/lib/constants";
 
 
 // Placeholder transaction data
@@ -171,7 +173,13 @@ export default function Payments({data} :Props) {
       case "ethereum":
         return <div className={`${baseClasses} bg-blue-500`}>E</div>;
       case "stacks":
-        return <div className={`${baseClasses} bg-orange-500`}>S</div>;
+      return(
+        <Avatar className="rounded-full w-6 h-6">
+           <AvatarImage
+          src={sBTClOGO}
+          alt="BTC"
+        />
+        </Avatar>);
       default:
         return <div className={`${baseClasses} bg-gray-500`}>?</div>;
     }
@@ -254,8 +262,12 @@ export default function Payments({data} :Props) {
                     <TableCell className="text-sm text-gray-900">{"July 17 2025"}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
-                        <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                        <span className="text-sm font-medium text-gray-900">{transaction.amount}</span>
+                          <Avatar className="rounded-full w-4 h-4">
+                         <AvatarImage
+          src={sBTClOGO}
+          alt="BTC"
+        /></Avatar>
+                        <span className="text-sm font-medium text-gray-900">{transaction.amount} Sats</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -270,7 +282,7 @@ export default function Payments({data} :Props) {
                     <TableCell className="text-sm text-gray-500">{transaction.collectedData?.email || transaction.collectedData?.name || "---"}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        {getNetworkIcon("Stack")}
+                        {getNetworkIcon("stacks")}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -284,8 +296,12 @@ export default function Payments({data} :Props) {
                 <SheetHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                      <SheetTitle className="text-lg font-semibold">{transaction.amount}</SheetTitle>
+                       <Avatar className="rounded-full w-4 h-4">
+                         <AvatarImage
+          src={sBTClOGO}
+          alt="BTC"
+        /></Avatar>
+                      <SheetTitle className="text-lg font-semibold">{transaction.amount} Sats</SheetTitle>
                     </div>
                     <Button variant="outline" size="sm" data-testid="button-receipt">
                       <Download className="w-4 h-4 mr-2" />
@@ -376,7 +392,7 @@ export default function Payments({data} :Props) {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Network</span>
                             <div className="flex items-center space-x-2">
-                              {getNetworkIcon("Stack")}
+                              {getNetworkIcon("stacks")}
                               <span className="text-sm text-gray-900">{"Stack"}</span>
                             </div>
                           </div>
@@ -404,11 +420,11 @@ export default function Payments({data} :Props) {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Withdrawal address</span>
-                            <span className="text-sm text-gray-900 font-mono">{"User wallet"}</span>
+                            <span className="text-sm text-gray-900 font-mono">{ transaction.user.wallets ?  truncateMiddle(transaction.user.wallets[0].address, 13, 8) : "---"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Payment address</span>
-                            <span className="text-sm text-gray-900 font-mono">{"user wallet"}</span>
+                            <span className="text-sm text-gray-900 font-mono">{"---"}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Payment Processing fee (1%)</span>
@@ -425,7 +441,7 @@ export default function Payments({data} :Props) {
                           <Separator />
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-900">Net amount</span>
-                            <span className="text-sm font-medium text-gray-900">{transaction.amount}</span>
+                            <span className="text-sm font-medium text-gray-900">{transaction.amount} Sats</span>
                           </div>
                         </div>
                       </div>

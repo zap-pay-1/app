@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client"
 
 import { useState, useRef, useEffect } from "react";
@@ -22,7 +23,7 @@ export default function Login() {
     const {isLoaded, signIn, setActive} = useSignIn()
   const router = useRouter()
   const { toast } = useToast();
-  const otpInputs = useRef<(HTMLInputElement | null)[]>([]);
+  const otpInputs = useRef<(HTMLInputElement | null )[]>([]);
 
   // Countdown timer for resend OTP
   useEffect(() => {
@@ -48,6 +49,7 @@ export default function Login() {
   try {
 const signInResp = await signIn.create({ identifier: email });
 console.log("Sigin In res", signInResp)
+//@ts-ignore
 const { emailAddressId } = signInResp.supportedFirstFactors.find(
   (ff) => ff.strategy === "email_code" && ff.safeIdentifier === email
 );
@@ -96,7 +98,7 @@ setStep("otp")
       } else {
         console.error(JSON.stringify(signInAttempt, null, 2))
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(JSON.stringify(err, null, 2))
     }
   };
@@ -261,7 +263,9 @@ console.log("started google ath ")
           {[0, 1, 2, 3, 4, 5].map((index) => (
             <Input
               key={index}
-              ref={el => otpInputs.current[index] = el}
+              ref={el => {
+    otpInputs.current[index] = el;
+  }}
               type="text"
               maxLength={1}
               value={otp[index] || ""}

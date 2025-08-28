@@ -181,7 +181,7 @@ setStep("otp")
     email : "freewaka19@gmail.com",
   });
   }
-
+// ref={el => otpInputs.current[index] = el}
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     
@@ -287,7 +287,9 @@ console.log("started google ath ")
           {[0, 1, 2, 3, 4, 5].map((index) => (
             <Input
               key={index}
-              ref={el => otpInputs.current[index] = el}
+               ref={el => {
+    otpInputs.current[index] = el;
+  }}
               type="text"
               maxLength={1}
               value={otp[index] || ""}

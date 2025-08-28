@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     images: {
     remotePatterns: [new URL('https://assets.coingecko.com/coins/images/**')],
   },
+   /* eslint: {
+    ignoreDuringBuilds: true,
+  },*/
 };
 
 export default nextConfig;

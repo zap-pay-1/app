@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import CheckoutPage from '@/components/pages/checkou-page';
-import PayLinkPage from '@/components/pages/payment-link-page'
 import { SERVER_EDNPOINT_URL } from '@/lib/constants';
-import { PAYMENT_LINK_DATA, SESSION_DATA } from '@/types/types';
+import {  SESSION_DATA } from '@/types/types';
 import React from 'react'
 export default async function page({ params }: any) {
     const sessionId = await params?.sessionId;

@@ -215,7 +215,7 @@ export default function RecentTransactions() {
       </CardHeader>
       <CardContent className="p-0">
         {data?.payments? (
-        <RecentPaymentsTable data={data!} isLoading={isLoading} />
+        <RecentPaymentsTable  />
         ) : isLoading ? (
    <LoadingState />
         )

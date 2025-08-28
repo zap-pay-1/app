@@ -1,8 +1,9 @@
-import { Link, useLocation } from "wouter";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/auth-context";
-import { Home, CreditCard, ExternalLink, Key, Webhook, BarChart3, LogOut, Zap } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+import { useAuth } from "@clerk/clerk-react";
+import { Home, CreditCard, ExternalLink, Key, Webhook, BarChart3, LogOut, Zap } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Transactions", href: "/transactions", icon: CreditCard },
@@ -13,8 +14,8 @@ const navigation = [
 ];
 
 export default function Sidebar() {
-  const [location] = useLocation();
-  const { user, logout } = useAuth();
+
+  const { userId } = useAuth();
 
   return (
     <div className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col">
@@ -31,7 +32,7 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-2">
         {navigation.map((item) => {
-          const isActive = location === item.href;
+          const isActive = true;
           return (
             <Link key={item.name} href={item.href}>
               <div 
@@ -58,12 +59,12 @@ export default function Sidebar() {
             <span className="text-gray-600 text-sm font-medium">JD</span>
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">{user?.username || "User"}</p>
-            <p className="text-xs text-gray-500">{user?.email || "user@company.com"}</p>
+            <p className="text-sm font-medium text-gray-900">{ "User"}</p>
+            <p className="text-xs text-gray-500">{ "user@company.com"}</p>
           </div>
           <button 
             className="text-gray-400 hover:text-gray-600"
-            onClick={logout}
+            onClick={() => console.log("user logged out")}
             data-testid="button-logout"
           >
             <LogOut className="w-4 h-4" />

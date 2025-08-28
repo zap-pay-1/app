@@ -4,7 +4,7 @@ import React from 'react'
 export default function page() {
   return (
     <div>
-      <CheckoutPage />
+      <p>Removed page a comp called checkout </p>
     </div>
   )
 }

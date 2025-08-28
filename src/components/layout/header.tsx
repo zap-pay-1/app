@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Download, Plus } from "lucide-react";
-import { useLocation } from "wouter";
 import { useState } from "react";
 import CreatePaymentLinkModal from "@/components/modals/create-payment-link-modal";
 
@@ -45,17 +44,16 @@ const getPageInfo = (pathname: string) => {
 };
 
 export default function Header() {
-  const [location] = useLocation();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const pageInfo = getPageInfo(location);
+  //const pageInfo = getPageInfo(location);
 
   return (
     <>
       <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{pageInfo.title}</h1>
-            <p className="text-sm text-gray-500 mt-1">{pageInfo.description}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{"Page title"}</h1>
+            <p className="text-sm text-gray-500 mt-1">{"page description"}</p>
           </div>
           <div className="flex items-center space-x-4">
             <Button 

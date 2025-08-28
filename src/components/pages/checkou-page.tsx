@@ -45,10 +45,6 @@ type RedeemProps = {
 
 export default function CheckoutPage(data : Props) {
     const [timeRemaining, setTimeRemaining] = useState(59 * 60 + 13);
-      const [showQR, setShowQR] = useState(false);
-       const [isProcessing, setIsProcessing] = useState(false);
-  const [billingAsShipping, setBillingAsShipping] = useState(false);
-   const [paymentConfig, setPaymentConfig] = useState<any>(null);
      const [connected, setConnected] = useState(false);
      const [paymentState, setpaymentState] = useState("default")
      const [stxAddress, setstxAddress] = useState<string | null>()
@@ -759,19 +755,6 @@ const transferSbtc = async () => {
                           </div>
                         </div>
 
-                        {paymentConfig.collectBilling && (
-                          <div className="flex items-center space-x-2">
-                            <Checkbox 
-                              id="billingAsShipping"
-                              checked={billingAsShipping}
-                              onCheckedChange={(checked) => setBillingAsShipping(checked === true)}
-                              data-testid="checkbox-billing-same"
-                            />
-                            <Label htmlFor="billingAsShipping" className="text-sm">
-                              Billing Details same as shipping details
-                            </Label>
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}

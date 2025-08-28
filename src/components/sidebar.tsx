@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Home, CreditCard, ExternalLink, Key, Webhook, BarChart3, LogOut, Zap, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@clerk/clerk-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },

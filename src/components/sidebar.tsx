@@ -22,6 +22,7 @@ const pathname = usePathname()
 
   return (
     <div className="fixed left-0 top-[60px] h-screen w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col z-40">
+      <div className="h-screen  w-full relative">
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-gray-200 flex-shrink-0 hidden">
         <div className="flex items-center space-x-3">
@@ -55,8 +56,9 @@ const pathname = usePathname()
         })}
       </nav>
 
+
       {/* User Account */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200  s absolute bottom-16">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
             <span className="text-gray-600 text-sm font-medium">JD</span>
@@ -73,6 +75,7 @@ const pathname = usePathname()
             <LogOut className="w-4 h-4" />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

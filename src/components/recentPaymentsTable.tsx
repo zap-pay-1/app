@@ -365,7 +365,9 @@ export default function RecentPaymentsTable() {
                           </div>
                         </div>
                       </div>
+                    
                     </TabsContent>
+
                   </Tabs>
                 </div>
               </SheetContent>

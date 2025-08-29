@@ -15,6 +15,7 @@ import { truncateMiddle } from "@/lib/utils";
 import Link from "next/link";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { sBTClOGO } from "@/lib/constants";
+import { formatSatsToBtcUI1 } from "@/lib/currencyRates";
 
 
 // Placeholder transaction data
@@ -267,7 +268,7 @@ export default function Payments({data} :Props) {
           src={sBTClOGO}
           alt="BTC"
         /></Avatar>
-                        <span className="text-sm font-medium text-gray-900">{transaction.amount} Sats</span>
+                        <span className="text-sm font-medium text-gray-900">{formatSatsToBtcUI1(transaction.amount)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -301,7 +302,7 @@ export default function Payments({data} :Props) {
           src={sBTClOGO}
           alt="BTC"
         /></Avatar>
-                      <SheetTitle className="text-lg font-semibold">{transaction.amount} Sats</SheetTitle>
+                      <SheetTitle className="text-lg font-semibold">{formatSatsToBtcUI1(transaction.amount)}</SheetTitle>
                     </div>
                     <Button variant="outline" size="sm" data-testid="button-receipt">
                       <Download className="w-4 h-4 mr-2" />
@@ -441,7 +442,7 @@ export default function Payments({data} :Props) {
                           <Separator />
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-900">Net amount</span>
-                            <span className="text-sm font-medium text-gray-900">{transaction.amount} Sats</span>
+                            <span className="text-sm font-medium text-gray-900">{formatSatsToBtcUI1(transaction.amount)}</span>
                           </div>
                         </div>
                       </div>

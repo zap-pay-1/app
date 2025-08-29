@@ -5,6 +5,7 @@ import { QrCode } from 'lucide-react'
 import { Button } from "./ui/button";
 import { SESSION_DATA } from '@/types/types';
 import { truncateMiddle } from '@/lib/utils';
+import { formatSatsToBtcUI1 } from '@/lib/currencyRates';
 
 
 type Props = {
@@ -55,7 +56,7 @@ export default function ScanQrCode({data, amount} : Props) {
 
                     <div className="text-center">
                       <div className="text-lg font-semibold text-gray-900 mb-2">
-                        {amount.toFixed(2)} {"sBTC"}
+                        {formatSatsToBtcUI1(amount)  || "0.00 sBTC"}
                       </div>
                       <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded font-mono break-all mb-4">
                         {truncateMiddle(data.session.id, 12, 8)}

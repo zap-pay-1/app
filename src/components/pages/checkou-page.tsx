@@ -34,6 +34,9 @@ import { toast } from '@/hooks/use-toast'
 import { error } from 'console'
 import { formatSatsToBtcUI, formatSatsToBtcUI1, getBtcUsdPrice, satsToUsd, usdToBtc } from '@/lib/currencyRates'
 import { useSatsToUsd } from '@/hooks/useGetUsdBySats'
+import TimerCountDown from '../timer-countDown'
+import {CountryWithPhoneCode, useCountriesWithPhoneCodes } from '@/hooks/useGetCountries'
+
 type Props = {
   data : SESSION_DATA
 }
@@ -55,6 +58,9 @@ export default function CheckoutPage(data : Props) {
      const [appliedCode, setappliedCode] = useState("")
      const [applied, setapplied] = useState(false)
      const [transferTxId, settransferTxId] = useState("")
+    const { data: countries =[], isLoading, isError: isCountriesError, error: countriesError } = useCountriesWithPhoneCodes();
+
+     
   
      useEffect(() => {
    if(isConnected()){
@@ -75,7 +81,7 @@ if (userData?.addresses) {
 
   const params = useParams(); 
   const sessionId = params.sessionId; 
-
+   console.log("current pay state", paymentState)
 
 useEffect(() => {
   socket.emit('join_checkout', sessionId);
@@ -116,7 +122,7 @@ useEffect(() => {
   });*/
   const { collectInfo, updateField } = useCollectInfo();
   // Timer countdown
- /* useEffect(() => {
+  /*useEffect(() => {
     const interval = setInterval(() => {
       setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -143,29 +149,34 @@ async function connectWallet() {
   console.log('Connected:', response.addresses);
 }
 
+ console.log(`data, ${data?.data.session.collectFields.name}`)
 
 // Transfer BTC
 
 const sbtcTokenAddress = "ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token";
 const sbtcTokenName = "sbtc-token";
+const recipient = data.data.session.user.wallets[0].address; // who receives sBTC
 // 2. Function args (transfer)
 const amount = 1000; // in satoshis (check decimals of sBTC contract)
-const sender = "ST3CC2E8Q38R6S4P8A5JKZZ2T15CJEG6HG44ZME4M"; // this will actually be auto-filled from wallet
-const recipient = data.data.session.user.wallets[0].address; // who receives sBTC
+const sender = stxAddress || recipient; // this will actually be auto-filled from wallet
 
-  console.log("recipients", recipient)
+
+  console.log("stxaddress", stxAddress)
 
 // 3. Post condition: ensure exactly `amount` sBTC leaves wallet
 const postConditions = [
   Pc.principal(sender)
-    .willSendEq(amount)
+    .willSendEq(finalAmount)
     .ft(sbtcTokenAddress, sbtcTokenName),
 ];
 
 const {data:usdValue, isLoading:usdValueLoading} = useSatsToUsd(finalAmount)
 
-  console.log("Usd value :", usdValue)
 const transferSbtc = async () => {
+  if(!stxAddress) {
+    console.log("Connect Wallet first")
+    return
+  }
   return new Promise((resolve, reject) => {
     try {
       showContractCall({
@@ -173,7 +184,7 @@ const transferSbtc = async () => {
         contractName: sbtcTokenName,
         functionName: "transfer",
         functionArgs: [
-          Cl.uint(amount),             // amount (make sure in sats)
+          Cl.uint(finalAmount),             // amount (make sure in sats)
           Cl.principal(sender),        // sender principal
           Cl.principal(recipient),     // recipient principal
           Cl.none(),                   // optional memo
@@ -336,7 +347,7 @@ const transferSbtc = async () => {
                     >
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Amount</span>
-                        <span className="font-medium text-gray-900">{finalAmount.toFixed(2)} { "sBTC"}</span>
+                        <span className="font-medium text-gray-900">{formatSatsToBtcUI1(finalAmount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Network</span>
@@ -401,7 +412,7 @@ const transferSbtc = async () => {
                     >
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Amount</span>
-                        <span className="font-medium text-gray-900">{finalAmount.toFixed(2)} {"sBTC"}</span>
+                        <span className="font-medium text-gray-900">{formatSatsToBtcUI1(finalAmount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Status</span>
@@ -480,7 +491,7 @@ const transferSbtc = async () => {
                     >
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Amount</span>
-                        <span className="font-medium text-gray-900">{finalAmount.toFixed(2)} {"sBTC"}</span>
+                        <span className="font-medium text-gray-900">{formatSatsToBtcUI1(finalAmount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Status</span>
@@ -495,7 +506,7 @@ const transferSbtc = async () => {
                       transition={{ delay: 0.6 }}
                     >
                       <Button 
-                        onClick={() => window.location.reload()}
+                        onClick={() => setpaymentState("default")}
                         className="w-full bg-blue-600 hover:bg-blue-700"
                         data-testid="button-try-again"
                       >
@@ -581,7 +592,7 @@ const transferSbtc = async () => {
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Amount</span>
-                          <span className="font-medium text-gray-900">{finalAmount.toFixed(2)} {"sBTC"}</span>
+                          <span className="font-medium text-gray-900">{formatSatsToBtcUI1(finalAmount)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Status</span>
@@ -610,12 +621,7 @@ const transferSbtc = async () => {
                 <div className="flex items-center space-x-2">
                   <h1 className="text-xl font-semibold text-gray-900">{data.data.session.business?.name}</h1>
                 </div>
-                {timeRemaining > 0 && (
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Clock className="w-4 h-4 mr-2" />
-                    Pay within {formatTime(timeRemaining)} min
-                  </div>
-                )}
+            <TimerCountDown onExpire={() => setpaymentState("expire")} initialMinutes={30} initialSeconds={0} />
               </div>
 
               <div className="bg-white rounded-lg border p-6">
@@ -624,7 +630,13 @@ const transferSbtc = async () => {
                 <div  className="space-y-6">
                   {/* Contact Information */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-4">Contact Information</h3>
+{(
+  data?.data?.session?.collectFields?.email ||
+  data?.data?.session?.collectFields?.phone ||
+  data?.data?.session?.collectFields?.name
+) && (
+  <h3 className="text-sm font-medium text-gray-700 mb-4">Contact Information</h3>
+)}
                    
                     <div className="space-y-0 ">
                       {data.data.session.collectFields.name  &&
@@ -692,10 +704,11 @@ const transferSbtc = async () => {
                               <SelectValue placeholder="Country" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="TZ">Tanzania</SelectItem>
-                              <SelectItem value="US">United States</SelectItem>
-                              <SelectItem value="GB">United Kingdom</SelectItem>
-                              <SelectItem value="CA">Canada</SelectItem>
+                             {
+                                        //@ts-ignore
+                                       (countries ?? []).map((item: CountryWithPhoneCode, i) => (
+                                        <SelectItem key={i} value={item.name}>{item.name}</SelectItem>
+                                       ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -828,8 +841,8 @@ const transferSbtc = async () => {
                   </div>
                   <div className="flex-1 flex justify-between">
                     <div>
-                    <h4 className=" text-sm font-medium text-gray-900">{prod.name ? prod.name : prod.title}</h4>
-                     <div className="text-xs text-gray-500 mt-1"> {prod.description ?<p className='capitalize'>{truncateMiddle(prod.description, 26, 4)}</p>: <p><span className='text-base font-light'>Qty</span> {prod?.quantity || 1}</p> }</div>
+                    <h4 className=" text-sm font-medium text-gray-900 ">{prod.name ? prod.name :   prod.title && prod.title}</h4>
+                     <div className="text-xs text-gray-500 mt-1"> {prod.description ?<p className='capitalize'>{truncateMiddle(prod.description, 26, 4)}</p>: <p><span className=' font-light'>Qty</span> {prod?.quantity || 1}</p> }</div>
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-gray-500">{prod.price ? prod.price.toFixed(2) : usdValue?.toFixed(2)} USD</span>
@@ -917,7 +930,7 @@ const transferSbtc = async () => {
             </div>
     </div>
 
-    <div className='p-5 border border-yellow-500 hidden md:flex items-center justify-center absolute bottom-2 w-full max-w-[500px] space-x-3'>
+    <div className='p-5  hidden md:flex items-center justify-center absolute bottom-2 w-full max-w-[500px] space-x-3'>
         <div>
            <p className=''><span className=' text-xs text-gray-400'>Powered by</span> <span className='font-semibold text-balance text-sm text-gray-400'>MunaPay</span></p>
         </div>
@@ -947,6 +960,9 @@ const transferSbtc = async () => {
         <ExpiredState  />
       )}
         {paymentState === 'failed' && (
+        <FailedState  />
+      )}
+       {paymentState === 'error' && (
         <FailedState  />
       )}
        {paymentState === 'abort_by_post_condition' && (

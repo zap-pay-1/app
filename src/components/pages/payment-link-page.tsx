@@ -117,8 +117,22 @@ console.log(`Form data Amount ${usdInput}`)
 
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white shadow-lg">
+    <div className="min-h-screen bg-[#f8fafc] relative flex items-center justify-center p-4">
+            <div
+    className="absolute inset-0 z-0"
+    style={{
+      backgroundImage: `
+        linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+        linear-gradient(to bottom, #e2e8f0 1px, transparent 1px)
+      `,
+      backgroundSize: "20px 30px",
+      WebkitMaskImage:
+        "radial-gradient(ellipse 70% 60% at 50% 100%, #000 60%, transparent 100%)",
+      maskImage:
+        "radial-gradient(ellipse 70% 60% at 50% 100%, #000 60%, transparent 100%)",
+    }}
+  />
+      <Card className="w-full max-w-md bg-white shadow-lg z-10">
         <CardContent className="p-8">
           {/* Header */}
           <div className="text-center mb-8">

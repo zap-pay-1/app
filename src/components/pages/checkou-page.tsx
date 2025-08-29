@@ -3,7 +3,7 @@
 
 
 import { PRODUCT, SESSION_DATA } from '@/types/types'
-import { CheckCircle2, Clock, Copy, CreditCard, Download, Loader2, Mail, Phone, QrCode, ScanIcon, User, Wallet, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock, Copy, CreditCard, Download, Loader2, LogOut, Mail, Phone, QrCode, ScanIcon, User, Wallet, XCircle } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Separator } from '../ui/separator'
 import { useForm } from 'react-hook-form'
@@ -32,7 +32,7 @@ import { openInExplorer, truncateMiddle } from '@/lib/utils'
 import ScanQrCode from '../scanQrCode'
 import { toast } from '@/hooks/use-toast'
 import { error } from 'console'
-import { formatSatsToBtcUI, formatSatsToBtcUI1, getBtcUsdPrice, satsToUsd, usdToBtc } from '@/lib/currencyRates'
+import {  formatSatsToBtcUI1, getBtcUsdPrice, satsToUsd, usdToBtc } from '@/lib/currencyRates'
 import { useSatsToUsd } from '@/hooks/useGetUsdBySats'
 import TimerCountDown from '../timer-countDown'
 import {CountryWithPhoneCode, useCountriesWithPhoneCodes } from '@/hooks/useGetCountries'
@@ -149,7 +149,11 @@ async function connectWallet() {
   console.log('Connected:', response.addresses);
 }
 
- console.log(`data, ${data?.data.session.collectFields.name}`)
+// Logout function
+function disconnectWallet() {
+  disconnect(); // Clears storage and wallet selection
+  setstxAddress(null)
+}
 
 // Transfer BTC
 
@@ -804,7 +808,15 @@ const transferSbtc = async () => {
      )
      
   return (
-    <div className='w-full h-screen flex flex-col md:flex-row '>
+    <div className='w-full h-screen flex flex-col md:flex-row relative '>
+      {stxAddress &&
+  <div className='  absolute right-5 top-1 hidden md:flex'>
+    <div className='flex p-2 bg-gray-100 rounded-xl items-center space-x-3 border'> 
+       <p className='text-sm'>{truncateMiddle(stxAddress)}</p>
+       <LogOut className='w-4 h-4 cursor-pointer'  onClick={() => disconnectWallet()}/>
+    </div>
+  </div>
+}
  <div className=' w-full md:w-1/2 flex-1 bg-gray-50 md:min-h-screen flex  py-4 md:py-10 justify-end border-b border-r-0 md:border-r md:border-gray-200 px-4 md:px-10 relative'>
     <div className=' md:max-h-[700px]  w-full md:max-w-[500px]'>
     <div className="bg-white rounded-lg border p-6 h-fit">

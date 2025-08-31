@@ -15,9 +15,11 @@ export default function ClientProvider({
   return (
   
      <QueryClientProvider client={queryClient}>
-          <SidebarProvider>
+         <SidebarProvider>
+          <div className='w-full'>
         {children}
-            </SidebarProvider>
+        </div>
+         </SidebarProvider>
            <Toaster />
         </QueryClientProvider>
    

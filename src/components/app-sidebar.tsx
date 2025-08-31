@@ -16,7 +16,8 @@ import {
 import { useUser, useAuth } from "@clerk/clerk-react"
 import { EmailAddress } from "@clerk/nextjs/server"
 import { truncateMiddle } from "@/lib/utils"
-
+import { usePathname } from "next/navigation"
+import LogoComp from "./LogoComp"
 // Menu items.
 const items = [
   {
@@ -54,28 +55,34 @@ const items = [
 export function AppSidebar() {
     const {user, }  = useUser()
     const {signOut} = useAuth()
+    const pathName = usePathname()
  const userEmail = user?.primaryEmailAddress?.emailAddress
   return (
-    <Sidebar>
+    <Sidebar variant="sidebar" >
         <SidebarHeader>
-            <div className="bg-red-700 h-7">
-            <p>Muna pay</p>
-            </div>
+           <LogoComp />
         </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+       {items.map((item) => {
+  const isDashboard = item.url === "/dashboard";
+  const isActive = isDashboard
+    ? pathName === "/dashboard"
+    : pathName.startsWith(item.url);
+
+  return (
+    <SidebarMenuItem key={item.title}>
+      <SidebarMenuButton asChild isActive={isActive} size={"lg"}>
+        <a href={item.url}>
+          <item.icon />
+          <span>{item.title}</span>
+        </a>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+})}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

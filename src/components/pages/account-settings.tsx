@@ -21,7 +21,6 @@ export default function AccountSettings({data} : Props) {
   const {user} = useUser()
   const emailAddress =  user?.primaryEmailAddress?.emailAddress
    const userId = user?.id
-  console.log("User", user?.id)
   const [formData, setFormData] = useState({
     firstName: data.user.first_name || "",
     lastName: data.user.last_name || "",

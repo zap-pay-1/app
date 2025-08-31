@@ -19,7 +19,8 @@ import { apiRequest } from "@/lib/queryClient";
 import axios from "axios";
 import { SERVER_EDNPOINT_URL } from "@/lib/constants";
 import { useAuth } from "@clerk/clerk-react";
-import { WEB_HOOKS_DATA } from "@/types/types";
+import { USER_DATA, WEB_HOOKS_DATA } from "@/types/types";
+import { StickyInfoBanner } from "../stick-info-banner";
 const createWebhookSchema = z.object({
   url: z.string().url("Please enter a valid URL"),
   events: z.array(z.string()).min(1, "Select at least one event"),
@@ -39,7 +40,10 @@ const availableEvents = [
   { id: "paymentlink.expired", label: "Payment Link Expired", description: "When a payment link expires" },
 ];
 
-export default function Webhooks() {
+type Props = {
+  data : USER_DATA
+}
+export default function Webhooks({data}: Props) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { toast } = useToast();
    const {userId} = useAuth()
@@ -48,7 +52,7 @@ export default function Webhooks() {
     const res = await axios.get(`${SERVER_EDNPOINT_URL}webhooks/${userId}`)
     return res.data
    }
-  const { data: webhooks , isLoading } = useQuery<WEB_HOOKS_DATA>({
+  const { data: webhooks , isLoading, isPending } = useQuery<WEB_HOOKS_DATA>({
     queryKey: ["/api/webhooks"],
     queryFn : fetchWebooks,
       enabled : !!userId
@@ -82,12 +86,17 @@ export default function Webhooks() {
    console.log(data)
   };
 
-  if (isLoading) {
+  if (isLoading|| isPending) {
     return <div data-testid="loading-state" className="w-full flex items-center justify-center h-screen"><p>Loading...</p></div>;
   }
 
   return (
     <div className="space-y-6">
+       {!data.user.wallets &&
+                  <StickyInfoBanner
+                   message="You haven't completed your business setup yet 🚀. Add your business info and connect your payment method to start accepting BTC payments today." 
+                   />
+                  }
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Webhooks</h1>
@@ -96,6 +105,7 @@ export default function Webhooks() {
         <Button 
           onClick={() => setIsCreateModalOpen(true)}
           data-testid="button-create-webhook"
+          disabled={!data.user.wallets}
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Webhook
@@ -125,7 +135,7 @@ export default function Webhooks() {
             <Button variant="outline" size="sm" className="text-green-700 border-green-300">
               View Documentation
             </Button>
-            <Button variant="outline" size="sm" className="text-green-700 border-green-300">
+            <Button variant="outline" size="sm" className="text-green-700 border-green-300 hidden">
               Test Webhooks
             </Button>
           </div>

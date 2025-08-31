@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { PAYMENT_LINK_DATA } from "@/types/types";
 import { useCreatePaymentSession } from "@/hooks/useCreateSession";
 import { usdToBtc, usdToSats } from "@/lib/currencyRates";
-
+import Image from "next/image";
 
 type Props = {
   data : PAYMENT_LINK_DATA
@@ -23,7 +23,7 @@ const networks = [
 ];
 
 const currencies = [
-  { id: "usdc", name: "USDC", symbol: "$" },
+  { id: "usdt", name: "STX", symbol: "$" },
   { id: "btc", name: "sBTC", symbol: "₿" },
   { id: "usd", name: "USD", symbol: "$" }
 ];
@@ -117,7 +117,7 @@ console.log(`Form data Amount ${usdInput}`)
 
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] relative flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f8fafc] relative flex flex-col items-center justify-center p-4 w-screen">
             <div
     className="absolute inset-0 z-0"
     style={{
@@ -136,17 +136,14 @@ console.log(`Form data Amount ${usdInput}`)
         <CardContent className="p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-gray-900">InkPay</span>
+            <div className="flex items-center justify-center space-x-2 mb-4 hidden">
+             <Image  src={`/img/logo.svg`} width={120} height={30} alt='logo' className='w-[140px] object-cover'/>
             </div>
             <h1 className="text-xl font-semibold text-gray-900 mb-2">
             {data.data.paymentLink.title}
             </h1>
             <p className="text-sm text-gray-500">
-              {data?.data.paymentLink.description}
+              {data?.data.paymentLink.description }
             </p>
           </div>
 
@@ -255,7 +252,7 @@ console.log(`Form data Amount ${usdInput}`)
             <Button
               onClick={()  => handleContinueToPay(Number(btcSats), formData.currency)}
               disabled={!isValidAmount || !btcSats || isPending}
-              className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500"
+              className="w-full h-12 text-base font-medium disabled:bg-gray-300 disabled:text-gray-500"
               data-testid="button-continue-to-pay"
             >
                {  isFetching ?(
@@ -273,6 +270,17 @@ console.log(`Form data Amount ${usdInput}`)
           </div>
         </CardContent>
       </Card>
+          <div className="text-center mt-8">
+            <div className="flex items-center justify-center space-x-1 text-xs text-gray-500">
+              <span>© munaPay 2025</span>
+              <span>•</span>
+              <a href="#" className="hover:text-gray-700">Contact</a>
+              <span>•</span>
+              <a href="#" className="hover:text-gray-700">Privacy Policy</a>
+              <span>•</span>
+              <a href="#" className="hover:text-gray-700">Terms of Conditions</a>
+            </div>
+          </div>
     </div>
   );
 }

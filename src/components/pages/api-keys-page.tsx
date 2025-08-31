@@ -18,13 +18,17 @@ import { apiRequest } from "@/lib/queryClient";
 import axios from "axios";
 import { SERVER_EDNPOINT_URL } from "@/lib/constants";
 import { useAuth } from "@clerk/clerk-react";
-import { API_KEY, API_KEYS_DATA } from "@/types/types";
+import { API_KEY, API_KEYS_DATA, USER_DATA } from "@/types/types";
 import { truncateMiddle } from "@/lib/utils";
+import { StickyInfoBanner } from "../stick-info-banner";
 const createApiKeySchema = z.object({
   name: z.string().min(1, "Name is required"),
 });
 
-export default function ApiKeys() {
+type Props = {
+  data : USER_DATA
+}
+export default function ApiKeys({data} : Props) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [showKey, setShowKey] = useState<string | null>(null);
@@ -35,7 +39,7 @@ export default function ApiKeys() {
     const res = await axios.get(`${SERVER_EDNPOINT_URL}api-keys/${userId}`)
     return res.data
    }
-  const { data: apiKeys , isLoading } = useQuery<API_KEYS_DATA>({
+  const { data: apiKeys , isLoading , isPending} = useQuery<API_KEYS_DATA>({
     queryKey: ["/api/keys"],
     queryFn : fetchApiKeys,
     enabled : !!userId
@@ -86,12 +90,17 @@ export default function ApiKeys() {
     setNewApiKey(null);
   };
 
-  if (isLoading) {
+  if (isLoading || isPending) {
     return <div data-testid="loading-state" className="w-full flex items-center justify-center h-screen"><p>Loading...</p></div>;
   }
 
   return (
     <div className="space-y-6">
+       {!data.user.wallets &&
+            <StickyInfoBanner
+             message="You haven't completed your business setup yet 🚀. Add your business info and connect your payment method to start accepting BTC payments today." 
+             />
+            }
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">API Keys</h1>
@@ -100,6 +109,7 @@ export default function ApiKeys() {
         <Button 
           onClick={() => setIsCreateModalOpen(true)}
           data-testid="button-create-api-key"
+          disabled={!data.user.wallets}
         >
           <Plus className="w-4 h-4 mr-2" />
           Create API Key

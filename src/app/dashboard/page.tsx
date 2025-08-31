@@ -12,8 +12,11 @@ export default async function Page() {
   });
   const stats : STATS = await res.json();
   console.log(stats)
+  console.log("user id", userId)
 //
   return (
+    <div>
     <Dashboard stats={stats} />
+    </div>
   )
 }

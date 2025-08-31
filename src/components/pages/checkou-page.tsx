@@ -58,6 +58,7 @@ export default function CheckoutPage(data : Props) {
      const [appliedCode, setappliedCode] = useState("")
      const [applied, setapplied] = useState(false)
      const [transferTxId, settransferTxId] = useState("")
+     const [isConnectingWallet, setisConnectingWallet] = useState(false)
     const { data: countries =[], isLoading, isError: isCountriesError, error: countriesError } = useCountriesWithPhoneCodes();
 
      
@@ -144,7 +145,9 @@ async function connectWallet() {
   }
 
   // Connect to wallet
+  setisConnectingWallet(true)
   const response = await connect();
+  setisConnectingWallet(false)
   setConnected(true)
   console.log('Connected:', response.addresses);
 }
@@ -576,7 +579,7 @@ const transferSbtc = async () => {
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm font-medium text-gray-900">Transaction Hash</span>
                           <button 
-                            onClick={() => navigator.clipboard.writeText("The tx hash")}
+                            onClick={() => navigator.clipboard.writeText(transferTxId)}
                             className="text-green-600 hover:text-green-700"
                           >
                             <Copy className="w-4 h-4" />
@@ -782,7 +785,11 @@ const transferSbtc = async () => {
                   <h4 className='text-sm'>Continue with your preferred payment method</h4>
                    <div className='my-3 space-y-3'>
                    <div className='flex justify-between items-center px-4 border rounded-xl cursor-pointer py-3' onClick={() => handleSendPayment()}>
-                    {submitTx.isPending ? "loading..." :(
+                    {submitTx.isPending ? (
+                      <div className='flex space-x-1 items-stretch'><Loader2 className='animate-spin text-muted-foreground'  /> <p>Loading...</p> </div>
+                    ) : isConnectingWallet ? (
+                      <div className='flex space-x-1 items-stretch'><Loader2 className='animate-spin text-muted-foreground'  /> <p>Connecting Wallet...</p> </div>
+                    ) :(
                      <div className='flex items-center space-x-1'> 
                       <Wallet className='w-5 h-5 text-gray-800' />
                       <p className='font-semibold text-sm'>{stxAddress ? "Pay With Wallet" : "Connect Wallet"}</p>

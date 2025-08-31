@@ -1,7 +1,10 @@
+
+
 import Login from '@/components/pages/login'
 import React from 'react'
 
-import { currentUser } from '@clerk/nextjs/server'
+import { currentUser, } from '@clerk/nextjs/server'
+import Home from '@/components/pages/home'
 
 
 export default async function Page() {
@@ -11,5 +14,6 @@ export default async function Page() {
 
   return <div>
     <p>Home page</p>
+    <Home />
   </div>
 }

@@ -5,12 +5,14 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, ArrowLeft, Shield } from "lucide-react";
+import { Mail, ArrowLeft, Shield, User } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
-import { useSignUp, useSignIn } from "@clerk/clerk-react";
+import { useSignUp, useSignIn, GoogleOneTap,  } from "@clerk/clerk-react";
 import { useRouter } from "next/navigation";
-
+import { CustomGoogleOneTap } from "../customeGoogleOneTap";
+import { OAuthStrategy } from '@clerk/types'
+import LogoComp from "../LogoComp";
 
 type LoginStep = "email" | "otp" | "success";
 
@@ -73,8 +75,8 @@ setStep("otp")
     console.error(JSON.stringify(err, null, 2))
       console.error("Send OTP error:", err);
       toast({
-        title: "Failed to send OTP",
-        description: "Please try again.",
+        title: "OTP request failed",
+        description: "Double-check your email. Not registered? Tap Sign up to get started.",
         variant: "destructive",
       });
   
@@ -88,6 +90,7 @@ setStep("otp")
  e.preventDefault()
     if (!isLoaded) return
     try {
+      setIsLoading(true)
       const signInAttempt = await signIn.attemptFirstFactor({
         code : otp,
         strategy : "email_code"
@@ -95,11 +98,22 @@ setStep("otp")
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId })
         router.push('/dashboard')
+        setIsLoading(false)
       } else {
         console.error(JSON.stringify(signInAttempt, null, 2))
+          toast({
+        title: "Something went wrong",
+        description:"Please enter a valid OTP. If you don’t have an otp yet, check your email",
+        variant: "destructive",
+      });
       }
     } catch (err) {
       console.error(JSON.stringify(err, null, 2))
+           toast({
+        title: "Something went wrong",
+        description:"Please enter a valid OTP. If you don’t have an otp yet, check your email",
+        variant: "destructive",
+      });
     }
   };
 
@@ -108,7 +122,6 @@ setStep("otp")
     
     try {
       // Simulate resending OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
         title: "OTP resent",
@@ -160,10 +173,26 @@ setStep("otp")
     setCountdown(0);
   };
 
+    const signInWith = (strategy: OAuthStrategy) => {
+    return signIn!
+      .authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/auth/sso-callback',
+        redirectUrlComplete: '/',
+      })
+      .then((res) => {
+        console.log(res)
+      })
+      .catch((err: any) => {
+        // See https://clerk.com/docs/custom-flows/error-handling
+        // for more info on error handling
+        console.log(err.errors)
+        console.error(err, null, 2)
+      })
+  }
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    
-console.log("started google ath ")
+    router.replace("/auth/signup")
   };
 
   const renderEmailStep = () => (
@@ -199,7 +228,7 @@ console.log("started google ath ")
           className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium"
           data-testid="button-login-email"
         >
-          {isLoading ? "Sending..." : "Login or Signup with email"}
+          {isLoading ? "Sending..." : "Login with email"}
         </Button>
       </form>
 
@@ -219,12 +248,13 @@ console.log("started google ath ")
         variant="outline"
         onClick={handleGoogleLogin}
         disabled={isLoading}
-        className="w-full h-12 border-gray-300 hover:bg-gray-50 font-medium"
+        className="w-full h-12 border-gray-300 hover:bg-gray-50 font-medium "
         data-testid="button-login-google"
       >
-        <SiGoogle className="w-4 h-4 mr-3 text-red-500" />
-        Login or Signup with Google
+        <User className="w-4 h-4 mr-3 " />
+        Create New Account
       </Button>
+    
     </>
   );
 
@@ -294,7 +324,7 @@ console.log("started google ath ")
         </p>
         <Button
           variant="ghost"
-          onClick={handleResendOtp}
+          onClick={handleEmailSubmit}
           disabled={countdown > 0 || isLoading}
           className="text-primary hover:text-primary/90 font-medium p-0 h-auto"
           data-testid="button-resend-otp"
@@ -324,7 +354,7 @@ console.log("started google ath ")
   );
 
   return (
-    <div className="min-h-screen  bg-[#f8fafc] relative flex items-center justify-center px-4">
+    <div className="min-h-screen  bg-[#f8fafc] relative flex items-center justify-center px-4 w-screen">
   <div
     className="absolute inset-0 z-0"
     style={{
@@ -341,14 +371,11 @@ console.log("started google ath ")
   />
       <div className="w-full max-w-md z-10">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center space-x-2 mb-6">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
-            </div>
-            <span className="text-xl font-semibold text-gray-900">Copperx</span>
-          </div>
-        </div>
+       <div className="text-center mb-8">
+                 <div className="inline-flex items-center space-x-2 mb-6">
+                  <LogoComp showBeta={false} />
+                 </div>
+               </div>
 
         {/* Login Card */}
         <Card className="border border-gray-200 shadow-sm">
@@ -363,7 +390,7 @@ console.log("started google ath ")
         {step === "email" && (
           <div className="text-center mt-8">
             <div className="flex items-center justify-center space-x-1 text-xs text-gray-500">
-              <span>© Copperx 2025</span>
+              <span>© munaPay 2025</span>
               <span>•</span>
               <a href="#" className="hover:text-gray-700">Contact</a>
               <span>•</span>

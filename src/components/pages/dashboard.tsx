@@ -23,6 +23,7 @@ export default function Dashboard({stats} : Props) {
  }
   return (
     <div className="space-y-8">
+      
       <IntegrationCards onCreatePaymentLink={navigateToCreateLink} />
       <StatsGrid stats={stats} onCreatePaymentLink={navigateToCreateLink} />
       

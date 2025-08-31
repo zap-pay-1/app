@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, X, Check, Sparkles, ExternalLink, Copy } from "lucide-react";
+import { Upload, X, Check, Sparkles, ExternalLink, Copy, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -24,13 +24,19 @@ import { supabase } from "@/lib/supabase-client";
 import { formSchema } from "@/lib/formSchema";
 import { useCreatePaymentLink } from "@/hooks/useCreatePayLink";
 import { useAuth } from "@clerk/clerk-react";
+import { StickyInfoBanner } from "../stick-info-banner";
+import { USER_DATA } from "@/types/types";
+import { HOSTED_URL } from "@/lib/constants";
 
 type FormData = z.infer<typeof formSchema>;
 
+type Props = {
+  data : USER_DATA
+}
 const tagOptions = ["Donation", "Freelance", "Payment"];
 const suggestionAmounts = ["5", "10", "25", "50", "100"];
  
-export default function CreatePaymentLink() {
+export default function CreatePaymentLink({data} : Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [generatedLink, setGeneratedLink] = useState("");
@@ -60,9 +66,10 @@ export default function CreatePaymentLink() {
     },
   });
 
+    console.log("user information from client", data)
   const watchedValues = form.watch();
   const isImageUploaded = form.watch("image")
-  console.log("image value", isImageUploaded)
+
   // Live preview data
   const previewData = {
     title: watchedValues.title || "Untitled Payment Link",
@@ -84,13 +91,17 @@ export default function CreatePaymentLink() {
       onSuccess: (res) => {
         console.log("Payment link created:", res);
         // maybe redirect or show toast
-          const mockId = Math.random().toString(36).substring(7);
-    const link = `https://pay.sbtc.dev/payment/${mockId}`;
+          const linkId = res?.paymentLink?.id;
+    const link = `${HOSTED_URL}payment/payment-link/${linkId}`;
     setGeneratedLink(link);
     setShowSuccess(true);
       },
       onError: (err) => {
-        console.error("Error creating payment link:", err);
+       toast({
+        title : "Something went wrong",
+        description : "Your payment link wasn’t generated. Make sure your setup is complete and try again.",
+        variant : "destructive"
+       })
       },
           onSettled: () => {
       // onSettled runs after success or error — good place to reset loading states
@@ -214,6 +225,11 @@ console.log("user id from origin", userId)
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {! data.user.wallets &&
+      <StickyInfoBanner
+       message="You haven't completed your business setup yet 🚀. Add your business info and connect your payment method to start accepting BTC payments today." 
+       />
+      }
       <div className="max-w-7xl mx-auto px-4 py-8 ">
         <div className="mb-8 flex flex-col items-center justify-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Payment Link</h1>
@@ -295,9 +311,8 @@ console.log("user id from origin", userId)
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="USDC">USDC</SelectItem>
-                                  <SelectItem value="BTC">sBTC</SelectItem>
-                                  <SelectItem value="DAI">DAI</SelectItem>
+                                  <SelectItem value="STX">STX</SelectItem>
+                                  <SelectItem value="sBTC">sBTC</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormItem>
@@ -562,12 +577,12 @@ console.log("user id from origin", userId)
                   type="submit" 
                   size="lg" 
                   className="w-full" 
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !data.user.wallets }
                   data-testid="button-create-payment-link"
                 >
                   {isSubmitting ? (
                     <>
-                      <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Creating Link...
                     </>
                   ) : (

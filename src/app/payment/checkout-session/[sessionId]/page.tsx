@@ -15,7 +15,7 @@ export default async function page({ params }: any) {
   console.log("Payment link", session)
 
   return (
-    <div>
+    <div className='w-full'>
 <CheckoutPage data={session}/>
     </div>
   );

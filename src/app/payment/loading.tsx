@@ -3,7 +3,7 @@ import React from 'react'
 export default function loading() {
   return (
     <div>
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center ">
         <div className="max-w-4xl w-full mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left side - Form skeleton */}

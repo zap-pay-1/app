@@ -28,7 +28,7 @@ import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 import { useMutation, useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { sBTClOGO, SERVER_EDNPOINT_URL } from '@/lib/constants'
-import { openInExplorer, truncateMiddle } from '@/lib/utils'
+import { openInExplorer, truncateEnd, truncateMiddle } from '@/lib/utils'
 import ScanQrCode from '../scanQrCode'
 import { toast } from '@/hooks/use-toast'
 import { error } from 'console'
@@ -282,7 +282,7 @@ const transferSbtc = async () => {
     // 5️⃣ After 70s, you can check status or leave socket to update
     console.log("now waiting for backend socket update");
     // Optionally, update state to something else if needed
-     setpaymentState("loading");
+     //setpaymentState("loading");
 
   } catch (err) {
      toast({
@@ -809,7 +809,7 @@ const transferSbtc = async () => {
             </div>
     </div>
      )
-     
+       const testDescr = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
   return (
     <div className='w-full h-screen flex flex-col md:flex-row relative '>
       {stxAddress &&
@@ -856,8 +856,8 @@ const transferSbtc = async () => {
                   </div>
                   <div className="flex-1 flex justify-between">
                     <div>
-                    <h4 className=" text-sm font-medium text-gray-900 ">{prod.name ? prod.name :   prod.title && prod.title}</h4>
-                     <div className="text-xs text-gray-500 mt-1"> {prod.description ?<p className='capitalize'>{truncateMiddle(prod.description, 26, 4)}</p>: <p><span className=' font-light'>Qty</span> {prod?.quantity || 1}</p> }</div>
+                    <h4 className=" text-sm font-medium text-gray-900 ">{prod.name ? truncateEnd(prod.name, 36) :   prod.title && truncateEnd(prod.title, 36)}</h4>
+                     <div className="text-xs text-gray-500 mt-1"> {prod.description ?<p className='capitalize'>{truncateMiddle(prod.description, 34, 4)}</p>: <p><span className=' font-light'>Qty</span> {prod?.quantity || 1}</p> }</div>
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-gray-500">{prod.price ? prod.price.toFixed(2) : usdValue?.toFixed(2)} USD</span>

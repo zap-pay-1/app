@@ -17,6 +17,13 @@ export function truncateMiddle(
   const end = str.slice(-backChars);
   return `${start}...${end}`;
 }
+export function truncateEnd(text : string, maxLength = 25) {
+  if (!text) return ""; // handle null/undefined
+  if (text.length <= maxLength) return text;
+
+  return text.slice(0, maxLength - 1) + "...";
+}
+
 
 const STACKS_EXPLORER_URL = "https://explorer.hiro.so";
 

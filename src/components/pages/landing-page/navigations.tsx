@@ -1,8 +1,9 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
-import { Download, Github, X } from "lucide-react";
+import { Download, Github, MoveRightIcon, X } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 export default function Navigation() {
 
   // https://discord.gg/pGzpYGuM
@@ -15,8 +16,10 @@ const openInNewTab = (url: string) => {
   window.open(url, "_blank", "noopener,noreferrer");
 };
 
+ const router = useRouter()
   const handleRedirect = () => {
-    window.location.assign("https://app.mygoat.fun/download");
+   // window.location.assign("https://app.mygoat.fun/download");
+   router.replace("/auth/signup")
   };
   return (
     <nav className="fixed top-0 left-0 right-0 z-50  backdrop-blur-md border-b border-white/10">
@@ -24,7 +27,6 @@ const openInNewTab = (url: string) => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-0">
             <Image width={60} height={60} src={`/img/logo.svg`} alt="munaPay" className="w-[170px]  object-cover " />
-            <span className="text-xl font-bold text-gray-900 hidden">GOAT</span>
           </div>
           <div className="hidden md:flex items-center space-x-8">
             <div className="flex items-center gap-5">
@@ -37,8 +39,8 @@ const openInNewTab = (url: string) => {
               Careers
             </a>
             <Button className="bg-gradient-to-r from-lime-primary to-lime-secondary text-dark-bg px-6 py-2 rounded-full font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105" onClick={() => handleRedirect()}>
-              <Download />
-              Get App
+              Get Started
+              <MoveRightIcon />
             </Button>
          
           </div>

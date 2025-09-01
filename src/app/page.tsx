@@ -8,12 +8,7 @@ import Home from '@/components/pages/home'
 
 
 export default async function Page() {
-  const user = await currentUser()
-  console.log("user is", user)
-  if (!user) return <div>Not signed in</div>
-
   return <div>
-    <p>Home page</p>
     <Home />
   </div>
 }

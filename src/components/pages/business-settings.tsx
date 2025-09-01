@@ -16,7 +16,11 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { SERVER_EDNPOINT_URL } from "@/lib/constants";
 import { USER_BUSINESSES } from "@/types/types";
-export default function BusinessSettings() {
+
+type Props = {
+  showBackBtn? : boolean
+}
+export default function BusinessSettings({showBackBtn = true} : Props) {
 const {userId } = useAuth()
 const { mutate: upsertBusiness, isError, data, error , isPending} = useUpsertBusiness();
   const { data: countries =[], isLoading, isError: isCountriesError, error: countriesError } = useCountriesWithPhoneCodes();
@@ -80,22 +84,19 @@ useEffect(() => {
   };
 
 
-  console.log("business mutation error",error )
-  console.log("business mutation data", data)
   const handleSaveChanges = () => {
     const info = {
         ...formData,
         clerkId : userId!
     }
    upsertBusiness(info)
-    // Handle save logic here
-    console.log("Saving business settings:", info);
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
+        { showBackBtn &&
         <div className="flex items-center space-x-4">
           <Link href="/dashboard/settings">
             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
@@ -104,7 +105,8 @@ useEffect(() => {
             </Button>
           </Link>
         </div>
-        <Button onClick={handleSaveChanges} data-testid="button-save-changes" disabled={isPending}>
+}
+        <Button onClick={handleSaveChanges} data-testid="button-save-changes" disabled={isPending || !formData.businessName} className={`${!showBackBtn ? "ml-auto" : ""}`}>
         {isPending ? "Loading..." : "Save changes"}
         </Button>
       </div>

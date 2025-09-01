@@ -10,7 +10,6 @@ export default async function page() {
         cache: 'no-store',
       });
       const user : USER_DATA = await res.json();
-     console.log(user)
   return (
     <div>
   <Webhooks data={user} />

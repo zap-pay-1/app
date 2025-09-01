@@ -10,7 +10,6 @@ export default async function page() {
       cache: 'no-store',
     });
     const payments : PAYMENT_DATA = await res.json();
-    console.log(payments)
   return (
     <div className='w-full'>
       <Payments data={payments}  />

@@ -1,8 +1,9 @@
-import AccountSettings from '@/components/pages/account-settings'
+
 import { SERVER_EDNPOINT_URL } from '@/lib/constants';
 import React from 'react'
 import {auth} from "@clerk/nextjs/server"
 import { USER, USER_DATA } from '@/types/types';
+import Onboarding from '@/components/pages/onboarding';
 export default async function page() {
     const { userId } = await auth()
      const res = await fetch(`${SERVER_EDNPOINT_URL}users/${userId}`, {
@@ -12,7 +13,7 @@ export default async function page() {
       const user : USER_DATA = await res.json();
   return (
     <div>
-  <AccountSettings data={user} />
+  <Onboarding data={user} />
     </div>
   )
 }

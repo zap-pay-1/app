@@ -11,7 +11,6 @@ export default async function page({ params }: any) {
   });
   const paymentLink: PAYMENT_LINK_DATA = await res.json();
 
-  console.log("Payment link", paymentLink)
 
   return (
     <div>

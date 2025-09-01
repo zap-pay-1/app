@@ -16,8 +16,9 @@ import { toast } from "@/hooks/use-toast";
 
 type Props = {
   data : USER_DATA
+    showBackBtn? : boolean
 }
-export default function AccountSettings({data} : Props) {
+export default function AccountSettings({data, showBackBtn = true} : Props) {
   const {user} = useUser()
   const emailAddress =  user?.primaryEmailAddress?.emailAddress
    const userId = user?.id
@@ -57,7 +58,8 @@ export default function AccountSettings({data} : Props) {
       onError : (err) => {
          toast({
           title : "Something went wrong",
-          description : err.message
+          description : err.message,
+          variant : "destructive"
         })
         console.log(err)
       }
@@ -66,13 +68,13 @@ export default function AccountSettings({data} : Props) {
   const handleSaveChanges = async () => {
     // Handle save logic here
     await mutate.mutateAsync()
-    console.log("Saving changes:", formData);
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
+        { showBackBtn &&
         <div className="flex items-center space-x-4">
           <Link href="/dashboard/settings">
             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
@@ -81,7 +83,8 @@ export default function AccountSettings({data} : Props) {
             </Button>
           </Link>
         </div>
-        <Button onClick={handleSaveChanges} data-testid="button-save-changes" disabled={mutate.isPending}>
+}
+        <Button onClick={handleSaveChanges} data-testid="button-save-changes" disabled={mutate.isPending || !formData.walletAddress} className={`${!showBackBtn ? "ml-auto" : ""}`}>
          {mutate.isPending ? "Loading..." : " Save changes"}
         </Button>
       </div>

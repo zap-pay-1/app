@@ -10,7 +10,6 @@ export default async function page() {
         cache: 'no-store',
       });
       const paymentsLinks : USER_PAYMENT_LINKS_DATA = await res.json();
-      console.log(paymentsLinks)
   return (
     <div className='w-full'>
       <PaymentLinks data={paymentsLinks} />

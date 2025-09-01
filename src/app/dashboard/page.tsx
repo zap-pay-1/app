@@ -11,8 +11,6 @@ export default async function Page() {
     cache: 'no-store',
   });
   const stats : STATS = await res.json();
-  console.log(stats)
-  console.log("user id", userId)
 //
   return (
     <div>

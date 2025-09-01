@@ -168,8 +168,6 @@ const amount = 1000; // in satoshis (check decimals of sBTC contract)
 const sender = stxAddress || recipient; // this will actually be auto-filled from wallet
 
 
-  console.log("stxaddress", stxAddress)
-
 // 3. Post condition: ensure exactly `amount` sBTC leaves wallet
 const postConditions = [
   Pc.principal(sender)
@@ -181,6 +179,11 @@ const {data:usdValue, isLoading:usdValueLoading} = useSatsToUsd(finalAmount)
 
 const transferSbtc = async () => {
   if(!stxAddress) {
+    toast({
+      title : "Wallet not connected",
+      description : "Please connect your wallet to continue with the payment.",
+      variant : "destructive"
+    })
     console.log("Connect Wallet first")
     return
   }
@@ -205,6 +208,11 @@ const transferSbtc = async () => {
           resolve(data.txId);
         },
         onCancel: () => {
+          toast({
+            title : "Payment cancelled",
+            description : "You cancelled the transaction in your wallet. No funds were sent.",
+            variant : "destructive"
+          })
           console.log("User canceled transaction");
           setpaymentState("failed");
           reject(new Error("User canceled transaction"));
@@ -233,7 +241,6 @@ const transferSbtc = async () => {
       toast({
         title : "Coupon applied succefully"
       })
-      console.log("The information returned", info)
       setfinalAmount(info.data?.amount)
       setapplied(true)
     },
@@ -248,23 +255,8 @@ const transferSbtc = async () => {
    //@ts-ignore
    const submitTx = useSubmitTx(sessionId);
 
-      console.log("the collected ddata", collectInfo)
-  /* const handleSubmitTx = async () => {
-      console.log("handleSubmitTx called");
-    const txId = await transferSbtc()
-    console.log("Got txId:", txId);
-    const res =  await submitTx.mutateAsync({
-      txid : txId,
-      collectedData : collectInfo
-     })
-     console.log("submitted copy", res)
-    setTimeout(() => {
-    setpaymentState("loading");
-  }, 70000);
-   }*/
 
   const handleSubmitTx = async () => {
-  console.log("handleSubmitTx called");
 
   try {
     // 1️⃣ Transfer sBTC and get txId
@@ -288,12 +280,16 @@ const transferSbtc = async () => {
     await new Promise((resolve) => setTimeout(resolve, 90000));
 
     // 5️⃣ After 70s, you can check status or leave socket to update
-    console.log("Loading finished, now waiting for backend socket update");
+    console.log("now waiting for backend socket update");
     // Optionally, update state to something else if needed
-    // setpaymentState("waitingConfirmation");
+     setpaymentState("loading");
 
   } catch (err) {
-    console.error("Error submitting tx:", err);
+     toast({
+      title : "Couldn’t complete transaction",
+      description : "Make sure you have enough funds and confirm the transaction in your wallet.",
+      variant : "destructive"
+     })
     setpaymentState("error");
   }
 };

@@ -83,7 +83,6 @@ export default function Webhooks({data}: Props) {
 
   const onSubmit = (data: z.infer<typeof createWebhookSchema>) => {
    createMutation.mutate(data);
-   console.log(data)
   };
 
   if (isLoading|| isPending) {

@@ -60,7 +60,7 @@ const router = useRouter()
   }, [data, createSession, router]);
 
 // debounce conversion
-useEffect(() => {
+/*useEffect(() => {
   const timer = setTimeout(async () => {
     if (!usdInput) {
       setBtcSats("");
@@ -73,9 +73,8 @@ useEffect(() => {
   }, 400);
 
   return () => clearTimeout(timer);
-}, [usdInput]);
+}, [usdInput]);*/
 
-console.log(`Form data Amount ${usdInput}`)
 
 
   const handleAmountChange = async (value: string) => {
@@ -89,11 +88,17 @@ console.log(`Form data Amount ${usdInput}`)
     setUsdInput(amount.toString())
   };
 
-  const handleContinueToPay = (amount : number, currency : string) => {
-    if (!btcSats || Number(btcSats) <= 0) {
+  const handleContinueToPay  = async ( currency : string) => {
+    if (!usdInput || Number(usdInput) <= 0) {
       return;
     }
-    
+    //amount : number
+    // Number(btcSats),
+    // Convert currency
+     setisFetching(true)
+     const amount = await usdToSats(Number(usdInput));
+     console.log("Converted amount is", amount)
+     setisFetching(false)
   createSession(
       { paymentLinkId: data.data.paymentLink.id, amount, currency },
       {
@@ -250,8 +255,8 @@ console.log(`Form data Amount ${usdInput}`)
 
             {/* Continue Button */}
             <Button
-              onClick={()  => handleContinueToPay(Number(btcSats), formData.currency)}
-              disabled={!isValidAmount || !btcSats || isPending}
+              onClick={()  => handleContinueToPay(formData.currency)}
+              disabled={!isValidAmount  || isPending || isFetching}
               className="w-full h-12 text-base font-medium disabled:bg-gray-300 disabled:text-gray-500"
               data-testid="button-continue-to-pay"
             >

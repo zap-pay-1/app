@@ -12,7 +12,6 @@ export default async function page({ params }: any) {
   });
   const session: SESSION_DATA = await res.json();
 
-  console.log("Payment link", session)
 
   return (
     <div className='w-full'>

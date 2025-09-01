@@ -159,8 +159,6 @@ export default function CreatePaymentLink({data} : Props) {
   console.log('Uploaded image URL:', publicUrl);
 };
 
-
-console.log("user id from origin", userId)
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

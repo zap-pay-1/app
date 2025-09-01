@@ -41,6 +41,11 @@ export default function Login() {
 
       if (!isLoaded) {
         console.log(`SDK not loaded yet`)
+        toast({
+          title : "Connection issue",
+          description : "Please check your internet connection or wait for the wallet SDK to finish loading.",
+          variant : "destructive"
+        })
         return
       }
     setIsLoading(true);
@@ -50,7 +55,6 @@ export default function Login() {
     // Start sign-up process using email and password provided
   try {
 const signInResp = await signIn.create({ identifier: email });
-console.log("Sigin In res", signInResp)
 //@ts-ignore
 const { emailAddressId } = signInResp.supportedFirstFactors.find(
   (ff) => ff.strategy === "email_code" && ff.safeIdentifier === email
@@ -173,23 +177,6 @@ setStep("otp")
     setCountdown(0);
   };
 
-    const signInWith = (strategy: OAuthStrategy) => {
-    return signIn!
-      .authenticateWithRedirect({
-        strategy,
-        redirectUrl: '/auth/sso-callback',
-        redirectUrlComplete: '/',
-      })
-      .then((res) => {
-        console.log(res)
-      })
-      .catch((err: any) => {
-        // See https://clerk.com/docs/custom-flows/error-handling
-        // for more info on error handling
-        console.log(err.errors)
-        console.error(err, null, 2)
-      })
-  }
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     router.replace("/auth/signup")

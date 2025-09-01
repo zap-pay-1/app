@@ -75,7 +75,6 @@ export default function CouponCodes() {
     lifetimePromo: false
   });
 
-   console.log("Forma data", formData)
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -125,7 +124,6 @@ export default function CouponCodes() {
     queryFn : fetchCoupons,
     enabled : !!userId
       })
-       console.log("coupons :", data)
   const handleCreateCoupon =  async () => {
     // Create new coupon logic
     /*const newCoupon: Coupon = {

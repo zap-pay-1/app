@@ -62,16 +62,14 @@ export default function ApiKeys({data} : Props) {
   const createMutation = useMutation({
     mutationFn:  createKey,  //(data: { lable: string, clerkId : string }) => apiRequest("POST", `${SERVER_EDNPOINT_URL}api-keys`, data),
     onSuccess: async (response) => {
-      console.log("Rsponse obje", response)
       const result = await response.data   //.json();
-      console.log("Result", result)
       setNewApiKey(result.apiKey);
       queryClient.invalidateQueries({ queryKey: ["/api/keys"] });
       form.reset();
       toast({ title: "API key created successfully" });
     },
     onError: (error) => {
-      console.log(error)
+      console.log("Error creating key", error)
       toast({ title: "Failed to create API key", variant: "destructive" });
     },
   });

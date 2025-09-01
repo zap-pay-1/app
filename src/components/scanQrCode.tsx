@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { SESSION_DATA } from '@/types/types';
 import { truncateMiddle } from '@/lib/utils';
 import { formatSatsToBtcUI1 } from '@/lib/currencyRates';
+import { HOSTED_URL } from '@/lib/constants';
 
 
 type Props = {
@@ -38,7 +39,7 @@ export default function ScanQrCode({data, amount} : Props) {
               <div className='w-full flex items-center justify-center'>
               <div className='p-2 border  rounded-xl'>
                  <Canvas
-      text={'https://github.com/bunlong/next-qrcode'}
+      text={`${HOSTED_URL}payment/payment-link/${data?.session?.id}`}
       options={{
         errorCorrectionLevel: 'M',
         margin: 0,

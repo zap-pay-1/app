@@ -302,6 +302,7 @@ const transferSbtc = async () => {
  }
  }
 
+  console.log("collectetable fields", data.data.session.collectFields)
 
     const LoadingState = () => (
        <motion.div
@@ -695,7 +696,7 @@ const transferSbtc = async () => {
                   </div>
 
                   {/* Shipping Information (only if collecting billing) */}
-                  {data.data.session.collectFields.shipping || data.data.session.collectFields.billing && (
+                 {(data.data.session.collectFields.shipping || data.data.session.collectFields.billing) && (
                     <div>
                       <h3 className="text-sm font-medium text-gray-700 mb-4">Shipping Information</h3>
                       <div className="space-y-0  rounded-xl">
@@ -706,7 +707,7 @@ const transferSbtc = async () => {
                             <SelectTrigger data-testid="select-country">
                               <SelectValue placeholder="Country" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className=''>
                              {
                                         //@ts-ignore
                                        (countries ?? []).map((item: CountryWithPhoneCode, i) => (
@@ -722,7 +723,7 @@ const transferSbtc = async () => {
                             placeholder="address line 1"
                             value={collectInfo.billingAddress.line1}
                             onChange={(e) => updateField("billingAddress.line1", e.target.value)}
-                            className="mt-1"
+                            className="mt-1 h-8"
                             data-testid="input-address-1"
                           />
                         </div>
@@ -733,7 +734,7 @@ const transferSbtc = async () => {
                             placeholder="Address Line 2"
                             value={collectInfo.billingAddress.line2}
                             onChange={(e) => updateField("billingAddress.line2", e.target.value)}
-                            className="mt-1"
+                            className="mt-1 h-8"
                             data-testid="input-address-2"
                           />
                         </div>
@@ -745,7 +746,7 @@ const transferSbtc = async () => {
                               placeholder="City"
                               value={collectInfo.billingAddress.city}
                               onChange={(e) => updateField("billingAddress.city", e.target.value)}
-                              className="mt-1"
+                              className="mt-1 h-8"
                               data-testid="input-city"
                             />
                           </div>
@@ -755,7 +756,7 @@ const transferSbtc = async () => {
                               placeholder="State"
                               value={collectInfo.billingAddress.state}
                               onChange={(e) => updateField("billingAddress.state", e.target.value)}
-                              className="mt-1"
+                              className="mt-1 h-8"
                               data-testid="input-state"
                             />
                           </div>
@@ -765,7 +766,7 @@ const transferSbtc = async () => {
                               placeholder="Zip Code"
                               value={collectInfo.billingAddress.zipCode}
                               onChange={(e) => updateField("billingAddress.zipCode", e.target.value)}
-                              className="mt-1"
+                              className="mt-1 h-8"
                               data-testid="input-zip"
                             />
                           </div>
@@ -773,7 +774,9 @@ const transferSbtc = async () => {
 
                       </div>
                     </div>
-                  )}
+
+                     )}
+
 
 
                 </div>
@@ -809,7 +812,6 @@ const transferSbtc = async () => {
             </div>
     </div>
      )
-       const testDescr = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
   return (
     <div className='w-full h-screen flex flex-col md:flex-row relative '>
       {stxAddress &&
@@ -990,3 +992,82 @@ const transferSbtc = async () => {
     </div>
   )
 }
+
+
+/*  <div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-4">Shipping Information</h3>
+                      <div className="space-y-0  rounded-xl">
+                        <div className='flex items-center space-x-3'>
+                          <Select
+                           value={collectInfo.billingAddress.country}
+                          onValueChange={(value) => updateField("billingAddress.country", value)}>
+                            <SelectTrigger data-testid="select-country">
+                              <SelectValue placeholder="Country" />
+                            </SelectTrigger>
+                            <SelectContent>
+                             {
+                                        //@ts-ignore
+                                       (countries ?? []).map((item: CountryWithPhoneCode, i) => (
+                                        <SelectItem key={i} value={item.name}>{item.name}</SelectItem>
+                                       ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className='flex items-center space-x-0.5'>
+                          <Input
+                            id="addressLine1"
+                            placeholder="address line 1"
+                            value={collectInfo.billingAddress.line1}
+                            onChange={(e) => updateField("billingAddress.line1", e.target.value)}
+                            className="mt-1"
+                            data-testid="input-address-1"
+                          />
+                        </div>
+
+                        <div className='flex items-center space-x-0.5'>
+                          <Input
+                            id="addressLine2"
+                            placeholder="Address Line 2"
+                            value={collectInfo.billingAddress.line2}
+                            onChange={(e) => updateField("billingAddress.line2", e.target.value)}
+                            className="mt-1"
+                            data-testid="input-address-2"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <Input
+                              id="city"
+                              placeholder="City"
+                              value={collectInfo.billingAddress.city}
+                              onChange={(e) => updateField("billingAddress.city", e.target.value)}
+                              className="mt-1"
+                              data-testid="input-city"
+                            />
+                          </div>
+                          <div>
+                            <Input
+                              id="state"
+                              placeholder="State"
+                              value={collectInfo.billingAddress.state}
+                              onChange={(e) => updateField("billingAddress.state", e.target.value)}
+                              className="mt-1"
+                              data-testid="input-state"
+                            />
+                          </div>
+                          <div>
+                            <Input
+                              id="zipCode"
+                              placeholder="Zip Code"
+                              value={collectInfo.billingAddress.zipCode}
+                              onChange={(e) => updateField("billingAddress.zipCode", e.target.value)}
+                              className="mt-1"
+                              data-testid="input-zip"
+                            />
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>*/

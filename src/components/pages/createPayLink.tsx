@@ -27,6 +27,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { StickyInfoBanner } from "../stick-info-banner";
 import { USER_DATA } from "@/types/types";
 import { HOSTED_URL } from "@/lib/constants";
+import { usdToSats } from "@/lib/currencyRates";
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -41,6 +42,7 @@ export default function CreatePaymentLink({data} : Props) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [generatedLink, setGeneratedLink] = useState("");
   const { toast } = useToast();
+  const [isUploadingFile, setisUploadingFile] = useState(false)
   const {userId} = useAuth()
  const router = useRouter()
    const { mutate: createPaymentLink, isPending } = useCreatePaymentLink();
@@ -83,8 +85,15 @@ export default function CreatePaymentLink({data} : Props) {
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
+  
+    // 1. Watch amount or get from data
+    const usdAmount = data.amount;
+
+    // 2. Convert to sats
+    const satsAmount = await usdToSats(usdAmount)
     const metadata = {
  ...data,
+ amount : satsAmount,
  clerkId : userId!
     }
       createPaymentLink(metadata, {
@@ -137,12 +146,18 @@ export default function CreatePaymentLink({data} : Props) {
   }
 
   const fileName = `${Date.now()}-${file.name}`;
-  
-  const { data, error } = await supabase.storage
+  setisUploadingFile(true)
+  const { data, error, } = await supabase.storage
     .from('products') // your bucket name
     .upload(fileName, file);
-
+setisUploadingFile(false)
   if (error) {
+    setisUploadingFile(false)
+    toast({
+      title : "Something Went wrong",
+      description : "Uploading link cover failed check your internet refresh and try again",
+      variant : "destructive"
+    })
     console.error('Upload error:', error);
     return;
   }
@@ -439,7 +454,12 @@ export default function CreatePaymentLink({data} : Props) {
     <div>
       {isImageUploaded ? (
         <img src={form.watch("image")} className="max-w-[500px] object-cover rounded-xl" alt="product cover " />
-      ):(
+      ): isUploadingFile ? (
+         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer">
+      <Loader2 className="w-8 h-8 text-gray-400 mx-auto mb-2 animate-spin" />
+      <p className="text-sm text-gray-600 mb-1">Uploading Link Cover</p>
+    </div>
+      ) :(
     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer">
       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
       <p className="text-sm text-gray-600 mb-1">Upload or drag your file here</p>

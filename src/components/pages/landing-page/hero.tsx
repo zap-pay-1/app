@@ -2,7 +2,7 @@
 "use client"
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Download } from "lucide-react";
+import { Download, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroVideoDialogDemoTopInBottomOut } from "./video-demo";
 import { BorderBeam } from "@/components/ui/beam-border";
@@ -56,18 +56,18 @@ export default function Hero({ addParallaxRef }: BettingExperienceProps) {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl md:text-6xl font-black text-gray-900 mb-6">
-           Bet on Players. Not Just Teams.
+          <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
+         Borderless Payments. Boundless Growth.
           </h2>
           <p className="text-lg text-gray-600 mb-4">
-            Predict player performance in PvP markets — goals, assists, knockouts, kills.
+          Expand your business with global Bitcoin payments. Fast, reliable, and fair
           </p>
           <p className="text-lg text-gray-600 mb-8">
-          No house. No odds manipulation. Just you vs fans like you.
+          built for merchants, creators, and communities.
           </p>
           <Button className="bg-gradient-to-r from-lime-primary to-lime-secondary text-black px-8 py-4 rounded-full font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105" onClick={() => handleRedirect()}>
-            <Download />
-            Install App
+            Get Started
+            <MoveRight />
           </Button>
         </motion.div>
 

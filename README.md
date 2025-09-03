@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🪙 MunaPay
 
-## Getting Started
+![Architecture Diagram](https://cdn.dorahacks.io/static/files/1990d31322bd16a33e2a1ff4f2880a5a.png)
 
-First, run the development server:
+> For **full documentation** on how MunaPay works and how to integrate it into your project, please visit:  
+> [📚 MunaPay Docs](https://zenvid.gitbook.io/muna-pay)
+
+---
+
+## 🚀 Overview
+
+This is the **Next.js 15+ frontend** for [MunaPay](https://munapay.xyz) — the next-gen checkout solution making BTC acceptance and integration simple and secure.  
+It powers the **dashboard, hosted checkout pages, and onboarding flows**.
+
+---
+
+## 📂 Project Structure
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+munapay-frontend/
+├── app/                 # Next.js App Router (pages, layouts, routes)
+│   ├── dashboard/       # Merchant dashboard (payments, stats, settings)
+│   ├── checkout/        # Hosted checkout pages
+│   ├── onboarding/      # Onboarding flow (account + business setup)
+│   ├── api/             # API routes (SSR helpers, not backend)
+│   └── ...              # Other Next.js routes
+├── components/          # Reusable UI components (shadcn/ui + custom)
+├── hooks/               # React hooks (auth, form, utils)
+├── lib/                 # Helpers (api client, validation, constants)
+├── public/              # Static assets (logos, images, fonts)
+├── styles/              # Global TailwindCSS styles
+├── types/               # TypeScript types
+├── .env.example         # Example env vars
+├── package.json
+└── tsconfig.json
+
+
+
+🛠️ Installation
+
+
+```bash
+git clone https://github.com/YOUR_ORG/munapay-frontend.git
+cd munapay-frontend
+pnpm install   # or npm/yarn
+
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## Contributing
 
-To learn more about Next.js, take a look at the following resources:
+Contributions are welcome!
+Please fork the repo and open a PR
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+👉 Quick summary of what we did:  
+- Put the **architecture image at the top**.  
+- Added a **docs link note** under it.  
+- Clear **project structure**.  
+- Minimal **install & run guide**.  
+- Highlights + tech stack.  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

@@ -362,7 +362,7 @@ console.log("started google ath ")
         </div>
       </div>
       <h1 className="text-2xl font-semibold text-gray-900 mb-3">
-        Welcome to sBTC Pay!
+        Welcome to  munaPay!
       </h1>
       <p className="text-sm text-gray-600">
         Taking you to your dashboard...

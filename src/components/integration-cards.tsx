@@ -1,7 +1,9 @@
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Code, Webhook } from "lucide-react";
+import { ExternalLink, Code, Webhook, LinkIcon } from "lucide-react";
 import Link from "next/link";
 
 interface IntegrationCardsProps {
@@ -9,6 +11,15 @@ interface IntegrationCardsProps {
 }
 
 export default function IntegrationCards({ onCreatePaymentLink }: IntegrationCardsProps) {
+
+   const openInNewTab = (url: string) => {
+  if (!url.startsWith("http")) {
+    console.warn("URL should be absolute. Example: https://example.com");
+    return;
+  }
+
+  window.open(url, "_blank", "noopener,noreferrer");
+};
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
       {/* Payment Links Card */}
@@ -16,7 +27,7 @@ export default function IntegrationCards({ onCreatePaymentLink }: IntegrationCar
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <ExternalLink className="w-6 h-6 text-blue-600" />
+              <LinkIcon className="w-6 h-6 text-blue-600" />
             </div>
             <Badge className="bg-green-100 text-green-800 text-xs">
               Most Popular
@@ -35,7 +46,7 @@ export default function IntegrationCards({ onCreatePaymentLink }: IntegrationCar
               <ExternalLink className="w-4 h-4 mr-2" />
               Create Payment Link
             </Button>
-            <Button variant="outline" className="w-full" data-testid="button-view-demo">
+            <Button variant="outline" className="w-full" data-testid="button-view-demo" onClick={() => openInNewTab("https://www.munapay.xyz/payment/payment-link/cmf22og7b0005cp1e1f5rsnnw")}>
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
               </svg>
@@ -72,7 +83,7 @@ export default function IntegrationCards({ onCreatePaymentLink }: IntegrationCar
                 Manage API Keys
               </Button>
             </Link>
-            <Button variant="outline" className="w-full" data-testid="button-view-docs">
+            <Button variant="outline" className="w-full" data-testid="button-view-docs" onClick={() => openInNewTab("https://zenvid.gitbook.io/muna-pay")}>
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19,3H5C3.9,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.9 20.1,3 19,3M6,17H8.5L13.5,9H11L8,14.5L6,9H8.5L11,14.5L13.5,9H16L11,17H6Z"/>
                 </svg>
@@ -109,11 +120,11 @@ export default function IntegrationCards({ onCreatePaymentLink }: IntegrationCar
                 Configure Webhooks
               </Button>
             </Link>
-            <Button variant="outline" className="w-full" data-testid="button-event-history">
+          <Button variant="outline" className="w-full" data-testid="button-view-docs" onClick={() => openInNewTab("https://zenvid.gitbook.io/muna-pay")}>
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M13.5,8H12V13L16.28,15.54L17,14.33L13.5,12.25V8M13,3A9,9 0 0,0 4,12H1L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3"/>
+                <path d="M19,3H5C3.9,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.9 20.1,3 19,3M6,17H8.5L13.5,9H11L8,14.5L6,9H8.5L11,14.5L13.5,9H16L11,17H6Z"/>
                 </svg>
-              Event History
+              View Documentation
             </Button>
           </div>
           <div className="text-xs text-gray-500">

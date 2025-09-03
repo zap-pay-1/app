@@ -64,7 +64,7 @@ export default function Webhooks({data}: Props) {
       url: "",
       events: [],
     },
-  });
+  });// 
 
   const createMutation = useMutation({
     mutationFn: (data: { url: string; events: string[] }) => 
@@ -79,6 +79,15 @@ export default function Webhooks({data}: Props) {
       toast({ title: "Failed to create webhook", variant: "destructive" });
     },
   });
+
+   const openInNewTab = (url: string) => {
+  if (!url.startsWith("http")) {
+    console.warn("URL should be absolute. Example: https://example.com");
+    return;
+  }
+
+  window.open(url, "_blank", "noopener,noreferrer");
+};
 
 
   const onSubmit = (data: z.infer<typeof createWebhookSchema>) => {
@@ -131,7 +140,7 @@ export default function Webhooks({data}: Props) {
             Content-Type: application/json
           </div>
           <div className="space-x-4">
-            <Button variant="outline" size="sm" className="text-green-700 border-green-300">
+            <Button variant="outline" size="sm" className="text-green-700 border-green-300" onClick={() => openInNewTab("https://zenvid.gitbook.io/muna-pay/integrate-payments/webhooks-and-events")}>
               View Documentation
             </Button>
             <Button variant="outline" size="sm" className="text-green-700 border-green-300 hidden">

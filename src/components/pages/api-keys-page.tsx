@@ -88,6 +88,15 @@ export default function ApiKeys({data} : Props) {
     setNewApiKey(null);
   };
 
+     const openInNewTab = (url: string) => {
+  if (!url.startsWith("http")) {
+    console.warn("URL should be absolute. Example: https://example.com");
+    return;
+  }
+
+  window.open(url, "_blank", "noopener,noreferrer");
+};
+
   if (isLoading || isPending) {
     return <div data-testid="loading-state" className="w-full flex items-center justify-center h-screen"><p>Loading...</p></div>;
   }
@@ -130,10 +139,10 @@ export default function ApiKeys({data} : Props) {
             Authorization: Bearer your-api-key-here
           </div>
           <div className="mt-4 space-x-4">
-            <Button variant="outline" size="sm" className="text-blue-700 border-blue-300">
+            <Button variant="outline" size="sm" className="text-blue-700 border-blue-300" onClick={() => openInNewTab("https://zenvid.gitbook.io/muna-pay/integrate-payments/accept-crypto-payments")}>
               View Documentation
             </Button>
-            <Button variant="outline" size="sm" className="text-blue-700 border-blue-300">
+            <Button variant="outline" size="sm" className="text-blue-700 border-blue-300 hidden">
               Code Examples
             </Button>
           </div>

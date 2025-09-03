@@ -6,15 +6,23 @@ import { Download, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroVideoDialogDemoTopInBottomOut } from "./video-demo";
 import { BorderBeam } from "@/components/ui/beam-border";
-
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/clerk-react";
 
 interface BettingExperienceProps {
   addParallaxRef: (el: HTMLElement | null) => void;
 }
 
 export default function Hero({ addParallaxRef }: BettingExperienceProps) {
-    const handleRedirect = () => {
-    window.location.assign("https://app.mygoat.fun/download");
+  const {user} = useUser()
+ const router = useRouter()
+  const handleRedirect = () => {
+   // window.location.assign("https://app.mygoat.fun/download");
+   if(user){
+     router.replace("/dashboard")
+   }else {
+    router.replace("/auth/signup")
+   }
   };
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden  w-full bg-[#f8fafc]  text-gray-900 ">
@@ -43,7 +51,7 @@ export default function Hero({ addParallaxRef }: BettingExperienceProps) {
     ease: "easeIn"
   }}
 >
-  Predict Greatness • Predict Greatness • Predict Greatness • Predict Greatness •
+  MunaPay • MunaPay • MunaPay • Munapay •
 </motion.h1>
       </div>
 
@@ -78,7 +86,7 @@ export default function Hero({ addParallaxRef }: BettingExperienceProps) {
 
           {/* Right Screenshot - Social Interaction */}
           <motion.div 
-            className="relative flex flex-col space-y-5 border-2 border-primary rounded-lg"
+            className="relative flex flex-col space-y-5  bg-primary p-3  border-primary rounded-lg"
             initial={{ opacity: 0, x: 50, rotate: 0 }}
             whileInView={{ opacity: 1, x: 0,}}
             transition={{ duration: 0.8, delay: 0.6 }}

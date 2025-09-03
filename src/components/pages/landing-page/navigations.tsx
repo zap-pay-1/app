@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Download, Github, MoveRightIcon, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/clerk-react";
+import { SiGitbook } from "react-icons/si";
 export default function Navigation() {
-
+const {user} = useUser()
   // https://discord.gg/pGzpYGuM
 const openInNewTab = (url: string) => {
   if (!url.startsWith("http")) {
@@ -19,7 +21,11 @@ const openInNewTab = (url: string) => {
  const router = useRouter()
   const handleRedirect = () => {
    // window.location.assign("https://app.mygoat.fun/download");
-   router.replace("/auth/signup")
+   if(user){
+     router.replace("/dashboard")
+   }else {
+    router.replace("/auth/signup")
+   }
   };
   return (
     <nav className="fixed top-0 left-0 right-0 z-50  backdrop-blur-md border-b border-white/10">
@@ -31,8 +37,8 @@ const openInNewTab = (url: string) => {
           <div className="hidden md:flex items-center space-x-8">
             <div className="flex items-center gap-5">
             
-           <X className=" text-gray-700 cursor-pointer" onClick={() => openInNewTab("https://x.com/goat_w3")} />
-           <Github className=" text-gray-700 cursor-pointer" onClick={() => openInNewTab("https://discord.gg/pGzpYGuM")} />
+           <SiGitbook className=" text-gray-700 cursor-pointer w-6 h-6" onClick={() => openInNewTab("https://zenvid.gitbook.io/muna-pay")} />
+           <Github className=" text-gray-700 cursor-pointer" onClick={() => openInNewTab("https://github.com/orgs/zap-pay-1/repositories")} />
 
            </div>
             <a href="#" className="text-gray-700 hidden hover:text-white transition-colors">

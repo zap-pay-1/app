@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { PAY_LINK_TYPES, USER_PAYMENT_LINKS_DATA } from "@/types/types";
 import { truncateMiddle } from "@/lib/utils";
 import { Avatar, AvatarImage } from "../ui/avatar";
-import { sBTClOGO } from "@/lib/constants";
+import { HOSTED_URL, sBTClOGO } from "@/lib/constants";
 
 // Placeholder payment links data
 const placeholderPaymentLinks = [
@@ -299,7 +299,7 @@ export default function PaymentLinks({data} : Props) {
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-blue-600 hover:text-blue-800">
-                          {truncateMiddle(`https://www.coingecko.com/${link.id}`, 18, 4)}
+                          {truncateMiddle(`${HOSTED_URL}payment/payment-link/${link.id}`, 25, 4)}
                         </span>
                         <Button 
                           variant="ghost" 
@@ -307,7 +307,7 @@ export default function PaymentLinks({data} : Props) {
                           className="h-4 w-4 p-0"
                           onClick={(e) => {
                             e.stopPropagation();
-                            copyToClipboard(`https://www.coingecko.com/${link.id}`);
+                            copyToClipboard(`${HOSTED_URL}payment/payment-link/${link.id}`);
                           }}
                           data-testid={`button-copy-url-${link.id}`}
                         >
@@ -366,12 +366,12 @@ export default function PaymentLinks({data} : Props) {
                       <span className="text-sm text-gray-500">URL</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-blue-600 font-mono truncate max-w-[200px]">
-                      {truncateMiddle(`https://www.coingecko.com/${link.id}`, 18, 4)}
+                      {truncateMiddle(`${HOSTED_URL}payment/payment-link/${link.id}`, 18, 4)}
                         </span>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => copyToClipboard(`https://www.coingecko.com/${link.id}`)}
+                          onClick={() => copyToClipboard(`${HOSTED_URL}payment/payment-link/${link.id}`)}
                           data-testid={`button-copy-url-sheet-${link.id}`}
                         >
                           <Copy className="w-3 h-3" />
@@ -379,7 +379,7 @@ export default function PaymentLinks({data} : Props) {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => window.open(`https://www.coingecko.com/${link.id}`, '_blank')}
+                          onClick={() => window.open(`${HOSTED_URL}payment/payment-link/${link.id}`, '_blank')}
                           data-testid={`button-open-url-${link.id}`}
                         >
                           <ExternalLink className="w-3 h-3" />
